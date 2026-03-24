@@ -1,0 +1,181 @@
+<div class="container-fluid py-4 min-vh-100 bg-light">
+
+  <!-- Header -->
+  <div class="mb-4">
+    <h2 class="fw-bold mb-0 text-dark">Point de Vente (POS)</h2>
+    <p class="text-muted small mb-0">Interface de caisse rapide et gestion des ventes.</p>
+  </div>
+
+  @if (alertMessage) {
+    <div class="alert alert-{{ alertType }} alert-dismissible fade show d-flex align-items-center mb-4 border-0 shadow-sm" role="alert">
+      @if (alertType === 'success') {
+        <svg class="bi flex-shrink-0 me-3" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      } @else if (alertType === 'warning') {
+        <svg class="bi flex-shrink-0 me-3" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      } @else {
+        <svg class="bi flex-shrink-0 me-3" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+      }
+      <div class="fw-medium">{{ alertMessage }}</div>
+      <button type="button" class="btn-close" (click)="clearAlert()" aria-label="Close"></button>
+    </div>
+  }
+
+  <div class="row g-4">
+    
+    <!-- LEFT COLUMN: Search & Catalog -->
+    <div class="col-12 col-xl-7 col-xxl-8">
+      <div class="card border-0 shadow-sm rounded-4 h-100 pos-catalog-card">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-3 px-4 rounded-top-4">
+          
+          <div class="input-group input-group-lg shadow-sm">
+            <span class="input-group-text bg-white border-end-0 text-muted">
+              <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </span>
+            <input type="text" class="form-control border-start-0 ps-0 fw-medium" placeholder="Scannez ou recherchez un médicament..." [(ngModel)]="searchQuery" (ngModelChange)="onSearch()">
+          </div>
+
+        </div>
+        
+        <div class="card-body px-4 pb-4 overflow-auto pos-catalog-body">
+          <div class="row g-3">
+            @for (med of filteredMedicaments; track med.id) {
+              <div class="col-sm-6 col-md-4 col-xl-3">
+                <div class="card h-100 border rounded-3 product-card shadow-sm-hover cursor-pointer" (click)="addToCart(med)">
+                  <div class="card-body p-3 d-flex flex-column text-center">
+                    <h6 class="card-title fw-bold text-dark mb-1 text-truncate" [title]="med.nom">{{ med.nom }}</h6>
+                    <p class="small text-muted mb-2 text-truncate">{{ med.formeDosage }}</p>
+                    <div class="mt-auto">
+                      <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 w-100 py-2 fs-6 mb-2">
+                        {{ med.prix | currency:'MAD':'symbol':'1.2-2' }}
+                      </span>
+                      <button class="btn btn-sm btn-outline-success w-100 fw-semibold">Ajouter</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            } @empty {
+              <div class="col-12 text-center py-5">
+                <p class="text-muted mb-0">Aucun médicament trouvé pour cette recherche.</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Cart / Ticket -->
+    <div class="col-12 col-xl-5 col-xxl-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100 ticket-card">
+        <div class="card-header bg-dark text-white pt-3 pb-3 px-4 rounded-top-4 text-center">
+          <h5 class="mb-0 fw-bold d-flex align-items-center justify-content-center gap-2">
+            <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+            Ticket de Caisse
+          </h5>
+        </div>
+
+        <!-- Optional Client Dropdown -->
+        <div class="bg-light px-4 py-3 border-bottom">
+          <label class="form-label small fw-medium text-muted mb-1">Client Associé (Optionnel)</label>
+          <select class="form-select form-select-sm" [(ngModel)]="selectedClientId" (ngModelChange)="onClientChange()">
+            <option [ngValue]="null">Client de passage</option>
+            @for (client of clients; track client.id) {
+              <option [ngValue]="client.id">{{ client.nom }} {{ client.prenom }}</option>
+            }
+          </select>
+
+          @if (selectedClientId) {
+            <div class="mt-2">
+              <label class="form-label small fw-medium text-muted mb-1">Attacher une ordonnance</label>
+
+              @if (isLoadingPrescriptions) {
+                <div class="small text-muted d-flex align-items-center gap-2">
+                  <span class="spinner-border spinner-border-sm"></span>
+                  Chargement des ordonnances...
+                </div>
+              } @else if (clientPrescriptions.length > 0) {
+                <select class="form-select form-select-sm" [(ngModel)]="selectedPrescriptionId">
+                  <option [ngValue]="null">Aucune ordonnance attachée</option>
+                  @for (prescription of clientPrescriptions; track prescription.id) {
+                    <option [ngValue]="prescription.id">
+                      #{{ prescription.id }} - Dr. {{ prescription.doctorName }} (validité: {{ prescription.validityDate | date:'dd/MM/yyyy' }})
+                    </option>
+                  }
+                </select>
+              } @else {
+                <p class="small text-muted mb-0">Aucune ordonnance active pour ce client.</p>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="card-body p-0 d-flex flex-column h-100">
+          
+          <!-- Cart Items List -->
+          <ul class="list-group list-group-flush flex-grow-1 overflow-auto ticket-list">
+            @for (item of cartItems; track item.medicamentId; let idx = $index) {
+              <li class="list-group-item p-3 py-3 border-bottom">
+                
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div class="fw-semibold text-truncate w-75">{{ item.medicament?.nom }}</div>
+                  <div class="fw-bold">{{ (item.prixUnitaire * item.quantite) | currency:'MAD':'symbol':'1.2-2' }}</div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="small text-muted">{{ item.prixUnitaire | currency:'MAD':'symbol':'1.2-2' }} / unité</span>
+                  
+                  <div class="input-group input-group-sm" style="width: 100px;">
+                    <button class="btn btn-outline-secondary px-2" type="button" (click)="decrementQuantity(idx)">
+                      <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </button>
+                    <input type="text" class="form-control text-center fw-medium px-1" [value]="item.quantite" readonly>
+                    <button class="btn btn-outline-secondary px-2" type="button" (click)="incrementQuantity(idx)">
+                      <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </button>
+                  </div>
+                </div>
+
+              </li>
+            } @empty {
+              <li class="list-group-item border-0 p-5 text-center text-muted h-100 d-flex flex-column justify-content-center align-items-center">
+                <svg style="width: 48px; height: 48px; opacity: 0.2; margin-bottom: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                <span>Le panier est vide.<br>Sélectionnez un article pour commencer.</span>
+              </li>
+            }
+          </ul>
+
+          <!-- Totals Footer -->
+          <div class="p-4 bg-light mt-auto border-top rounded-bottom-4 shadow-sm z-1">
+            <div class="d-flex justify-content-between mb-1 small text-muted">
+              <span>Total HT</span>
+              <span>{{ totalHT | currency:'MAD':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3 small text-muted">
+              <span>TVA (20%)</span>
+              <span>{{ totalTVA | currency:'MAD':'symbol':'1.2-2' }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-4 mt-2">
+              <span class="h4 fw-bold mb-0 text-dark">Total TTC</span>
+              <span class="h4 fw-bold mb-0 text-success">{{ totalTTC | currency:'MAD':'symbol':'1.2-2' }}</span>
+            </div>
+            
+            <button 
+              class="btn btn-success btn-lg w-100 py-3 fw-bold d-flex justify-content-center align-items-center gap-2 shadow-sm" 
+              [disabled]="cartItems.length === 0 || isSubmitting"
+              (click)="submitVente()"
+            >
+              @if (isSubmitting) {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Validation...
+              } @else {
+                <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                VALIDER LA VENTE
+              }
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

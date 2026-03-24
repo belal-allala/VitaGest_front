@@ -1,0 +1,186 @@
+<div class="container-fluid py-4 stock-page position-relative">
+  @if (toast()) {
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080">
+      <div class="toast show border-0 shadow">
+        <div class="toast-header text-white" [ngClass]="toast()?.type === 'success' ? 'bg-success' : 'bg-danger'">
+          <strong class="me-auto">Notification</strong>
+          <button type="button" class="btn-close btn-close-white" (click)="toast.set(null)"></button>
+        </div>
+        <div class="toast-body fw-medium">
+          {{ toast()?.text }}
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold mb-0 text-slate">Supervision globale des lots</h2>
+      <p class="text-muted small mb-0">Vue temps réel du stock pharmacie et ajustements rapides</p>
+    </div>
+    <button class="btn btn-outline-success" (click)="refresh()">Actualiser</button>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 mb-3">
+    <div class="card-body d-flex flex-column flex-lg-row gap-3 align-items-lg-center">
+      <div class="input-group flex-grow-1">
+        <span class="input-group-text bg-white">Recherche</span>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Médicament ou lot ID..."
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+        />
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-sm" [ngClass]="activeFilter() === 'ALL' ? 'btn-dark' : 'btn-outline-dark'" (click)="setFilter('ALL')">All</button>
+        <button class="btn btn-sm" [ngClass]="activeFilter() === 'EXPIRED' ? 'btn-danger' : 'btn-outline-danger'" (click)="setFilter('EXPIRED')">Expired</button>
+        <button class="btn btn-sm" [ngClass]="activeFilter() === 'LOW' ? 'btn-warning' : 'btn-outline-warning'" (click)="setFilter('LOW')">Low Stock</button>
+        <button class="btn btn-sm" [ngClass]="activeFilter() === 'NEAR_EXPIRY' ? 'btn-info text-white' : 'btn-outline-info'" (click)="setFilter('NEAR_EXPIRY')">Near Expiry</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="kpi-card kpi-emerald">
+        <div class="kpi-label">Valeur stock globale</div>
+        <div class="kpi-value">{{ totalInventoryValue() | currency:'MAD ':'symbol':'1.0-0' }}</div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="kpi-card kpi-red">
+        <div class="kpi-label">Lots expirés</div>
+        <div class="kpi-value">{{ expiredBatches() }}</div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-label">Alertes stock bas</div>
+        <div class="kpi-value">{{ lowStockAlerts() }}</div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-label">Expiration sous 90 jours</div>
+        <div class="kpi-value">{{ nearExpiryBatches() }}</div>
+      </div>
+    </div>
+  </div>
+
+  @if (state().error && !state().loading) {
+    <div class="alert alert-danger d-flex justify-content-between align-items-center">
+      <span>{{ state().error }}</span>
+      <button class="btn btn-sm btn-outline-danger" (click)="refresh()">Réessayer</button>
+    </div>
+  }
+
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table align-middle table-hover mb-0">
+        <thead class="table-light text-uppercase small">
+          <tr>
+            <th class="ps-3">Médicament</th>
+            <th>Lot ID</th>
+            <th>Quantité</th>
+            <th>Expiration</th>
+            <th>Valeur</th>
+            <th>Status</th>
+            <th class="text-end pe-3">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (state().loading) {
+            @for (row of [1,2,3,4,5]; track row) {
+              <tr class="placeholder-glow">
+                <td class="ps-3"><span class="placeholder col-8"></span></td>
+                <td><span class="placeholder col-6"></span></td>
+                <td><span class="placeholder col-4"></span></td>
+                <td><span class="placeholder col-6"></span></td>
+                <td><span class="placeholder col-5"></span></td>
+                <td><span class="placeholder col-4"></span></td>
+                <td><span class="placeholder col-6"></span></td>
+              </tr>
+            }
+          } @else {
+            @for (stock of filteredStocks(); track stock.id ?? $index) {
+              <tr>
+                <td class="ps-3">
+                  <div class="fw-semibold">{{ stock.medicament?.nom || 'N/A' }}</div>
+                  <div class="small text-muted">{{ stock.medicament?.dci || '-' }}</div>
+                </td>
+                <td>{{ stock.lotId || '-' }}</td>
+                <td>{{ stock.quantite }}</td>
+                <td>{{ stock.dateExpiration | date:'dd/MM/yyyy' }}</td>
+                <td>{{ getStockValue(stock) | currency:'MAD ':'symbol':'1.2-2' }}</td>
+                <td><span [class]="getStatusClass(stock)">{{ getStatusLabel(stock) }}</span></td>
+                <td class="text-end pe-3">
+                  @if (isAdmin()) {
+                    <button class="btn btn-sm btn-outline-warning" (click)="openAdjustModal(stock)">Adjust</button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="text-center py-5">
+                  <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                      <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                      <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    <h6 class="fw-bold mb-1">Aucun lot en stock</h6>
+                    <p class="text-muted small mb-0">Essayez un autre filtre ou rechargez les données.</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (showAdjustModal()) {
+  <div class="modal-backdrop-vitagest" (click)="closeAdjustModal()"></div>
+  <div class="modal d-block" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-warning bg-opacity-10">
+          <h6 class="modal-title fw-bold">
+            Ajuster lot {{ selectedStock()?.lotId || '-' }}
+          </h6>
+          <button type="button" class="btn-close" (click)="closeAdjustModal()"></button>
+        </div>
+        <form [formGroup]="adjustForm" (ngSubmit)="submitAdjust()">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Nouvelle quantité</label>
+              <input type="number" class="form-control" formControlName="quantite" />
+            </div>
+            <div>
+              <label class="form-label small fw-semibold">Motif (obligatoire)</label>
+              <textarea class="form-control" rows="2" formControlName="motif" placeholder="Ex: inventaire, casse, correction..."></textarea>
+              @if (adjustForm.get('motif')?.invalid && adjustForm.get('motif')?.touched) {
+                <div class="text-danger small mt-1">Motif obligatoire (5 caractères minimum).</div>
+              }
+            </div>
+          </div>
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-light btn-sm" (click)="closeAdjustModal()">Annuler</button>
+            <button class="btn btn-warning btn-sm fw-bold" [disabled]="isSubmittingAdjust()">
+              @if (isSubmittingAdjust()) {
+                <span class="spinner-border spinner-border-sm me-1"></span>Exécution...
+              } @else {
+                Mettre à jour
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+

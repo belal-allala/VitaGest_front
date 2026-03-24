@@ -1,0 +1,113 @@
+<div class="container-fluid py-4 min-vh-100 position-relative z-1" style="background-color: #0f172a;">
+  
+  <!-- Header (Dark Theme for Black Box) -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold mb-0 text-white d-flex align-items-center gap-2">
+         <svg style="width: 24px; height: 24px;" class="text-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+         </svg>
+         Traçabilité & Audits (Boîte Noire)
+      </h2>
+      <p class="text-secondary small mb-0">Surveillance temps réel des activités critiques du système VitaGest.</p>
+    </div>
+    
+    <div class="d-flex gap-2">
+      <!-- Filter Dropdown -->
+      <select class="form-select bg-dark border-secondary text-light shadow-sm" [ngModel]="filterType()" (ngModelChange)="onFilter($event)">
+         <option value="ALL">Tous les Événements</option>
+         <option value="LOGIN">Connexions système</option>
+         <option value="CREATION">Créations</option>
+         <option value="MODIFICATION">Modifications logiques</option>
+         <option value="STOCK_ADJUSTMENT">Ajustements Manuels Stock</option>
+         <option value="PRICE_CHANGE" class="text-warning">Changements de Prix</option>
+         <option value="DELETION" class="text-danger fw-bold">Suppressions Critiques</option>
+      </select>
+
+      <!-- Search Box -->
+      <div class="input-group shadow-sm" style="max-width: 320px;">
+        <span class="input-group-text bg-dark border-secondary border-end-0 text-secondary">
+          <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <input type="text" class="form-control bg-dark border-secondary border-start-0 text-light ps-0" placeholder="Rechercher Acteur, Cible..." 
+               [ngModel]="searchTerm()" (ngModelChange)="onSearch($event)">
+      </div>
+    </div>
+  </div>
+
+  @if (globalError() && !isLoading()) {
+    <div class="alert alert-danger shadow-sm border-0 d-flex align-items-center bg-danger bg-opacity-25 text-white">
+      <svg class="flex-shrink-0 me-2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      <div class="fw-medium">{{ globalError() }}</div>
+    </div>
+  }
+
+  <!-- Data Matrix Card -->
+  <div class="card border border-secondary shadow-sm rounded-4 overflow-hidden bg-dark">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover align-middle mb-0 custom-audit-table">
+        <thead class="text-secondary small text-uppercase" style="background-color: #1e293b; letter-spacing: 0.5px;">
+          <tr>
+            <th scope="col" class="ps-4 py-3 border-secondary">Horodatage (UTC)</th>
+            <th scope="col" class="py-3 border-secondary">Type d'Événement</th>
+            <th scope="col" class="py-3 border-secondary">Acteur Authentifié</th>
+            <th scope="col" class="py-3 border-secondary">Entité Cible</th>
+            <th scope="col" class="pe-4 py-3 border-secondary w-25">Détails Tracés</th>
+          </tr>
+        </thead>
+        <tbody class="border-top-0 border-secondary">
+          
+          @if (isLoading()) {
+            @for (i of [1,2,3,4,5,6]; track i) {
+              <tr class="placeholder-glow opacity-50">
+                <td class="ps-4"><span class="placeholder col-6 bg-secondary rounded"></span></td>
+                <td><span class="placeholder col-5 bg-secondary rounded-pill"></span></td>
+                <td><span class="placeholder col-8 bg-secondary rounded"></span></td>
+                <td><span class="placeholder col-4 bg-secondary rounded"></span></td>
+                <td class="pe-4"><span class="placeholder col-10 bg-secondary rounded"></span></td>
+              </tr>
+            }
+          }
+
+          @if (!isLoading()) {
+            @for (log of filteredAudits(); track log.id) {
+              <tr [ngClass]="{'bg-danger bg-opacity-10': log.actionType === 'DELETION'}">
+                <td class="ps-4 text-secondary" style="font-family: monospace;">
+                   <svg style="width: 14px; height: 14px; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                   {{ (log.dateAction | date:'dd/MM/yyyy HH:mm:ss.SSS') || log.dateAction }}
+                </td>
+                <td>
+                   <span [class]="getActionBadgeClass(log.actionType)">
+                      {{ log.actionType }}
+                   </span>
+                </td>
+                <td class="fw-medium text-light">
+                   <div class="d-flex align-items-center gap-2">
+                      <div class="rounded-circle bg-secondary bg-opacity-25 p-1 d-flex align-items-center justify-content-center">
+                         <svg style="width: 12px; height: 12px;" class="text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                      </div>
+                      {{ log.acteurEmail }}
+                   </div>
+                </td>
+                <td class="text-info fw-bold" style="letter-spacing: 0.5px;">{{ log.entiteCible }}</td>
+                <td class="pe-4 text-light small opacity-75" style="max-width: 300px;">
+                   {{ log.details }}
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="text-center py-5 border-0">
+                   <div class="d-flex flex-column align-items-center text-secondary">
+                    <svg style="width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.2;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <h6>Journal d'Audit vide</h6>
+                    <p class="small mb-0">Aucun événement critique n'a été enregistré correspondant à ce filtre.</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,234 @@
+<div class="container-fluid py-4 prescription-page">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+      <h2 class="fw-bold mb-0 text-slate">Gestion des ordonnances</h2>
+      <p class="text-muted small mb-0">Archivage digital et liaison client/vente</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-success" (click)="refresh()">Actualiser</button>
+      <button class="btn btn-success" (click)="openCreateModal()">
+        Nouvelle ordonnance
+      </button>
+    </div>
+  </div>
+
+  @if (submitSuccess()) {
+    <div class="alert alert-success border-0 shadow-sm">{{ submitSuccess() }}</div>
+  }
+
+  @if (state().loading) {
+    <div class="glass-card p-4 text-center">
+      <div class="spinner-border text-success mb-2" role="status"></div>
+      <p class="mb-0 text-muted">Chargement des ordonnances...</p>
+    </div>
+  } @else if (state().error) {
+    <div class="alert alert-danger d-flex justify-content-between align-items-center">
+      <span>{{ state().error }}</span>
+      <button class="btn btn-sm btn-outline-danger" (click)="refresh()">Réessayer</button>
+    </div>
+  } @else {
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-white border-0 p-3">
+        <div class="input-group">
+          <span class="input-group-text bg-white">Rechercher</span>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Filtrer par client ou médecin..."
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+          />
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Client</th>
+                <th>Médecin</th>
+                <th>Date Prescription</th>
+                <th>Validité</th>
+                <th>Statut</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (prescription of filteredPrescriptions(); track prescription.id ?? $index) {
+                <tr>
+                  <td>{{ prescription.id ?? '-' }}</td>
+                  <td>{{ getClientDisplayName(prescription.clientId) }}</td>
+                  <td>{{ prescription.doctorName }}</td>
+                  <td>{{ prescription.datePrescription | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ prescription.validityDate | date:'dd/MM/yyyy' }}</td>
+                  <td>
+                    @let status = getStatusLabel(prescription);
+                    <span [class]="getStatusClass(status)">
+                      {{ status }}
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <button class="btn btn-sm btn-outline-secondary" (click)="printSummary(prescription)">
+                      Print Summary
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7" class="text-center text-muted py-5">
+                    Aucune ordonnance trouvée.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+@if (showCreateModal()) {
+  <div class="modal-backdrop-vitagest" (click)="closeCreateModal()"></div>
+  <div class="modal d-block" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header">
+          <h5 class="modal-title">Créer une ordonnance</h5>
+          <button type="button" class="btn-close" (click)="closeCreateModal()"></button>
+        </div>
+        <form [formGroup]="prescriptionForm" (ngSubmit)="savePrescription()">
+          <div class="modal-body">
+            @if (submitError()) {
+              <div class="alert alert-danger">{{ submitError() }}</div>
+            }
+
+            <div class="row g-3">
+              <div class="col-12 col-lg-6">
+                <label class="form-label fw-semibold">Client</label>
+                <input
+                  type="text"
+                  class="form-control mb-2"
+                  placeholder="Rechercher client..."
+                  [ngModel]="clientSearchTerm()"
+                  (ngModelChange)="clientSearchTerm.set($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                />
+                <select class="form-select" formControlName="clientId">
+                  <option [ngValue]="null">Sélectionner un client</option>
+                  @for (client of filteredClientsForModal(); track client.id) {
+                    <option [ngValue]="client.id">{{ client.nom }} {{ client.prenom }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="col-12 col-lg-6">
+                <label class="form-label fw-semibold">Médecin</label>
+                <input type="text" class="form-control" formControlName="doctorName" placeholder="Dr. Nom Prénom" />
+              </div>
+
+              <div class="col-12 col-lg-6">
+                <label class="form-label fw-semibold">RPPS / Numéro d'ordre</label>
+                <input type="text" class="form-control" formControlName="doctorRegistrationNumber" />
+              </div>
+
+              <div class="col-12 col-lg-3">
+                <label class="form-label fw-semibold">Date Prescription</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  formControlName="datePrescription"
+                  (change)="onPrescriptionDateChange()"
+                />
+              </div>
+
+              <div class="col-12 col-lg-3">
+                <label class="form-label fw-semibold">Date Validité</label>
+                <input type="date" class="form-control" formControlName="validityDate" />
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Lien scan (optionnel)</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="scannedImageUrl"
+                  placeholder="https://.../scan-ordonnance.jpg"
+                />
+              </div>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="mb-0">Lignes de prescription</h6>
+              <button type="button" class="btn btn-sm btn-outline-success" (click)="addLine()">
+                Ajouter une ligne
+              </button>
+            </div>
+
+            <div formArrayName="items" class="d-flex flex-column gap-3">
+              @for (line of itemsFormArray.controls; track $index) {
+                <div class="card border-0 shadow-sm" [formGroupName]="$index">
+                  <div class="card-body">
+                    <div class="row g-2 align-items-end">
+                      <div class="col-12 col-md-4">
+                        <label class="form-label small fw-semibold">Médicament</label>
+                        <select class="form-select" formControlName="medicamentId">
+                          <option [ngValue]="null">Choisir...</option>
+                          @for (med of state().medicaments; track med.id) {
+                            <option [ngValue]="med.id">{{ med.nom }} - {{ med.formeDosage }}</option>
+                          }
+                        </select>
+                      </div>
+
+                      <div class="col-12 col-md-3">
+                        <label class="form-label small fw-semibold">Dosage</label>
+                        <input type="text" class="form-control" formControlName="dosage" placeholder="1 cp matin/soir" />
+                      </div>
+
+                      <div class="col-12 col-md-3">
+                        <label class="form-label small fw-semibold">Durée</label>
+                        <input type="text" class="form-control" formControlName="duration" placeholder="7 jours" />
+                      </div>
+
+                      <div class="col-9 col-md-2">
+                        <label class="form-label small fw-semibold">Fréquence</label>
+                        <input type="text" class="form-control" formControlName="frequency" placeholder="2x/j" />
+                      </div>
+
+                      <div class="col-3 col-md-1 d-grid">
+                        <button type="button" class="btn btn-outline-danger" (click)="removeLine($index)" title="Supprimer">
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            @if (prescriptionForm.hasError('invalidValidityRange')) {
+              <div class="text-danger small mt-3">
+                La validité doit être au moins 1 jour après la date de prescription.
+              </div>
+            }
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" (click)="closeCreateModal()">Annuler</button>
+            <button class="btn btn-success" type="submit" [disabled]="isSubmitting()">
+              @if (isSubmitting()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>Enregistrement...
+              } @else {
+                Enregistrer
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+

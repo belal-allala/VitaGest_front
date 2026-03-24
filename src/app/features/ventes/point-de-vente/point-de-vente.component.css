@@ -1,0 +1,32 @@
+.pos-catalog-card {
+  height: calc(100vh - 120px);
+  min-height: 500px;
+}
+
+.pos-catalog-body {
+  height: 100%;
+}
+
+.ticket-card {
+  height: calc(100vh - 120px);
+  min-height: 500px;
+}
+
+.ticket-list {
+  max-height: calc(100% - 210px);
+  scrollbar-width: thin;
+}
+
+.shadow-sm-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.shadow-sm-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+  border-color: #198754 !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}

@@ -1,0 +1,125 @@
+<div class="container-fluid py-4">
+  
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold mb-0 text-dark">Fournisseurs</h2>
+      <p class="text-muted small mb-0">Annuaire de vos partenaires et grossistes.</p>
+    </div>
+    
+    <div class="d-flex gap-2">
+      <div class="input-group" style="max-width: 300px;">
+        <span class="input-group-text bg-white border-end-0 text-muted">
+          <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <input type="text" class="form-control border-start-0 ps-0" placeholder="Rechercher..." [(ngModel)]="searchTerm" (ngModelChange)="onSearch()">
+      </div>
+
+      <button class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addEditFournisseurModal" (click)="openAddModal()">
+        <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span class="d-none d-sm-inline">Nouveau Fournisseur</span>
+      </button>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="d-flex justify-content-center my-5">
+      <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement...</span></div>
+    </div>
+  }
+
+  @if (!isLoading) {
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="bg-light text-muted small text-uppercase">
+            <tr>
+              <th scope="col" class="ps-4 fw-semibold border-bottom-0 py-3">ID</th>
+              <th scope="col" class="fw-semibold border-bottom-0 py-3">Nom</th>
+              <th scope="col" class="fw-semibold border-bottom-0 py-3">Email</th>
+              <th scope="col" class="fw-semibold border-bottom-0 py-3">Téléphone</th>
+              <th scope="col" class="text-end pe-4 fw-semibold border-bottom-0 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="border-top-0">
+            @for (f of filteredFournisseurs; track f.id) {
+              <tr>
+                <td class="ps-4 text-muted">#{{ f.id }}</td>
+                <td class="fw-medium text-dark">{{ f.nom }}</td>
+                <td class="text-muted">{{ f.email || '-' }}</td>
+                <td class="text-muted">{{ f.telephone || '-' }}</td>
+                <td class="text-end pe-4">
+                  <div class="btn-group gap-2">
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addEditFournisseurModal" (click)="openEditModal(f)">
+                      <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteFournisseurModal" (click)="confirmDelete(f)">
+                      <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="text-center py-5 text-muted">Aucun fournisseur trouvé.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Add / Edit Modal -->
+<div class="modal fade" id="addEditFournisseurModal" tabindex="-1" aria-labelledby="addEditFournisseurModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow rounded-4">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold">{{ isEditMode ? 'Modifier' : 'Nouveau Fournisseur' }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form [formGroup]="fournisseurForm" (ngSubmit)="onSubmit()">
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label fw-medium small text-muted">Nom de la société / Contact</label>
+            <input type="text" class="form-control" formControlName="nom">
+            @if (fournisseurForm.get('nom')?.invalid && fournisseurForm.get('nom')?.touched) {
+              <div class="text-danger small mt-1">Le nom est requis.</div>
+            }
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-medium small text-muted">Email (Optionnel)</label>
+            <input type="email" class="form-control" formControlName="email">
+            @if (fournisseurForm.get('email')?.invalid && fournisseurForm.get('email')?.touched) {
+              <div class="text-danger small mt-1">Email invalide.</div>
+            }
+          </div>
+          <div class="mb-2">
+            <label class="form-label fw-medium small text-muted">Téléphone (Optionnel)</label>
+            <input type="text" class="form-control" formControlName="telephone">
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0 pe-4 pb-4">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-primary px-4">{{ isEditMode ? 'Enregistrer' : 'Créer' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteFournisseurModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow rounded-4 text-center">
+      <div class="modal-body p-4 p-sm-5">
+        <h5 class="fw-bold mb-3">Confirmation</h5>
+        <p class="text-muted small mb-4">Supprimer <strong>{{ fournisseurToDelete?.nom }}</strong> ?</p>
+        <div class="d-flex gap-2 w-100">
+          <button type="button" class="btn btn-light w-50" data-bs-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-danger w-50" (click)="executeDelete()">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

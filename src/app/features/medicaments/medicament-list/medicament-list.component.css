@@ -1,0 +1,53 @@
+/* Custom Aesthetic Tokens */
+
+.text-slate { color: #64748b !important; }
+.bg-slate { background-color: #64748b !important; }
+
+.text-emerald { color: #059669 !important; }
+.bg-emerald { background-color: #059669 !important; }
+.btn-emerald {
+  background-color: #059669;
+  color: white;
+  transition: all 0.2s;
+  border: none;
+}
+.btn-emerald:hover {
+  background-color: #047857;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.slate-shadow {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+}
+
+/* Action Buttons Grid */
+.action-btn {
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  transition: all 0.15s ease-in-out;
+}
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Table Enhancements */
+.table th {
+  border-bottom: 2px solid #e2e8f0;
+}
+.table tbody tr {
+  transition: background-color 0.2s ease;
+}
+.table tbody tr:hover {
+  background-color: #f8fafc;
+}
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Skeleton Loading Animation Core override */
+.placeholder {
+  pointer-events: none;
+  background-color: #e2e8f0 !important;
+}

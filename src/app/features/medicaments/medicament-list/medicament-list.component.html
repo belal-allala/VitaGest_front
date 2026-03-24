@@ -1,0 +1,348 @@
+<div class="container-fluid py-4 position-relative">
+  <!-- Toast overlay -->
+  @if (toastMessage()) {
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080">
+      <div class="toast show border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header text-white" [ngClass]="toastMessage()?.type === 'success' ? 'bg-success' : 'bg-danger'">
+          <strong class="me-auto">Notification</strong>
+          <button type="button" class="btn-close btn-close-white" (click)="toastMessage.set(null)" aria-label="Close"></button>
+        </div>
+        <div class="toast-body bg-white text-dark fw-medium">
+          {{ toastMessage()?.text }}
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Header -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold mb-0 text-dark">Référentiel Médicaments</h2>
+      <p class="text-muted small mb-0">Gestion sécurisée du catalogue et surveillance des lots.</p>
+    </div>
+    
+    <div class="d-flex gap-2">
+      <!-- Search -->
+      <div class="input-group" style="max-width: 320px;">
+        <span class="input-group-text bg-white border-end-0 text-muted">
+          <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input type="text" class="form-control border-start-0 ps-0" placeholder="Rechercher (Nom, DCI)..." 
+               [ngModel]="searchTerm()" (ngModelChange)="onSearch($event)">
+      </div>
+
+      <!-- Button Add (Admin Only) -->
+      @if (isAdmin()) {
+        <button class="btn btn-emerald d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addEditMedicamentModal" (click)="openAddModal()">
+          <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span class="d-none d-sm-inline">Nouveau Produit</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Global Error Overlay -->
+  @if (globalError() && !isLoading()) {
+    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+      <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:">
+        <use xlink:href="#exclamation-triangle-fill"/>
+      </svg>
+      <div class="fw-medium">{{ globalError() }}</div>
+    </div>
+  }
+
+  <!-- Data Table Card -->
+  <div class="card border-0 slate-shadow rounded-4 overflow-hidden bg-white">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="bg-light text-slate text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">
+          <tr>
+            <th scope="col" class="ps-4 fw-semibold border-bottom py-3">ID</th>
+            <th scope="col" class="fw-semibold border-bottom py-3">Catalogue (Nom & DCI)</th>
+            <th scope="col" class="fw-semibold border-bottom py-3">Forme / Dosage</th>
+            <th scope="col" class="fw-semibold border-bottom py-3">Prix Unitaire</th>
+            <th scope="col" class="fw-semibold border-bottom py-3">Stock Dispo</th>
+            <th scope="col" class="text-end pe-4 fw-semibold border-bottom py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="border-top-0">
+          
+          <!-- Loading Skeletons -->
+          @if (isLoading()) {
+            @for (i of [1,2,3,4,5]; track i) {
+              <tr class="placeholder-glow">
+                <td class="ps-4"><span class="placeholder col-6 rounded"></span></td>
+                <td>
+                  <span class="placeholder col-8 rounded mb-1"></span><br>
+                  <span class="placeholder col-5 rounded bg-secondary"></span>
+                </td>
+                <td><span class="placeholder col-8 rounded"></span></td>
+                <td><span class="placeholder col-6 rounded"></span></td>
+                <td><span class="placeholder col-4 rounded-pill"></span></td>
+                <td class="text-end pe-4"><span class="placeholder col-8 rounded"></span></td>
+              </tr>
+            }
+          }
+
+          <!-- Computed Data Rows -->
+          @if (!isLoading()) {
+            @for (medicament of filteredMedicaments(); track medicament.id) {
+              <tr>
+                <td class="ps-4 text-slate small">#{{ medicament.id }}</td>
+                <td>
+                  <div class="fw-bold text-dark">{{ medicament.nom }}</div>
+                  <div class="text-secondary fst-italic small" style="opacity: 0.8;">{{ medicament.dci }}</div>
+                </td>
+                <td>
+                  <span class="badge rounded-pill bg-light text-dark border px-2 py-1 fw-normal">
+                    {{ medicament.formeDosage }}
+                  </span>
+                </td>
+                <td class="fw-semibold text-emerald">{{ medicament.prix | currency:'MAD':'symbol':'1.2-2' }}</td>
+                <td>
+                  @switch (true) {
+                    @case ((medicament.quantiteEnStock || 0) < 10) {
+                      <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">
+                        {{ medicament.quantiteEnStock || 0 }} en stock
+                      </span>
+                    }
+                    @case ((medicament.quantiteEnStock || 0) < 20) {
+                      <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">
+                        {{ medicament.quantiteEnStock || 0 }} en stock
+                      </span>
+                    }
+                    @default {
+                      <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
+                        {{ medicament.quantiteEnStock || 0 }} en stock
+                      </span>
+                    }
+                  }
+                </td>
+                <td class="text-end pe-4">
+                  <div class="btn-group gap-2">
+                    <button class="btn btn-sm action-btn text-primary border-primary bg-primary bg-opacity-10" data-bs-toggle="modal" data-bs-target="#viewStockModal" (click)="viewStock(medicament)" title="Voir Stock & Lots">
+                      <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
+                      </svg>
+                      <span class="ms-1 fw-bold">Lots</span>
+                    </button>
+
+                    @if (isAdmin()) {
+                      <button class="btn btn-sm action-btn text-secondary bg-light border" data-bs-toggle="modal" data-bs-target="#addEditMedicamentModal" (click)="openEditModal(medicament)" title="Modifier">
+                        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </button>
+                      <button class="btn btn-sm action-btn text-danger bg-danger bg-opacity-10 border-danger border-opacity-25" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" (click)="confirmDelete(medicament)" title="Supprimer">
+                        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="text-center py-5">
+                  <div class="d-flex flex-column align-items-center">
+                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                      <svg style="width: 40px; height: 40px; color: #cbd5e1;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line>
+                      </svg>
+                    </div>
+                    <h5 class="fw-bold text-dark">Aucune donnée correspondante</h5>
+                    <p class="text-muted small mb-0">Le médicament recherché n'existe pas dans la base de données.</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Form Modal -->
+<div class="modal fade" id="addEditMedicamentModal" tabindex="-1" aria-labelledby="addEditMedicamentModalLabel" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-bottom bg-light px-4 py-3">
+        <h5 class="modal-title fw-bold text-dark" id="addEditMedicamentModalLabel">
+          {{ isEditMode() ? 'Mettre à jour le Produit' : 'Créer un Produit' }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form [formGroup]="medicamentForm" (ngSubmit)="onSubmitMedicament()">
+        <div class="modal-body p-4">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-medium small text-slate">Nom Commercial</label>
+              <input type="text" class="form-control" formControlName="nom" placeholder="Ex: Doliprane" [ngClass]="{'is-invalid': medicamentForm.get('nom')?.invalid && medicamentForm.get('nom')?.touched}">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-medium small text-slate">DCI (Molécule)</label>
+              <input type="text" class="form-control" formControlName="dci" placeholder="Ex: Paracétamol" [ngClass]="{'is-invalid': medicamentForm.get('dci')?.invalid && medicamentForm.get('dci')?.touched}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-medium small text-slate">Forme & Dosage</label>
+              <input type="text" class="form-control" formControlName="formeDosage" placeholder="Ex: Comp. 1000mg" [ngClass]="{'is-invalid': medicamentForm.get('formeDosage')?.invalid && medicamentForm.get('formeDosage')?.touched}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-medium small text-slate">Prix Achat (MAD)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted">MAD</span>
+                <input type="number" step="0.10" min="0" class="form-control" formControlName="prix" [ngClass]="{'is-invalid': medicamentForm.get('prix')?.invalid && medicamentForm.get('prix')?.touched}">
+              </div>
+              @if (medicamentForm.get('prix')?.hasError('min') && medicamentForm.get('prix')?.touched) {
+                <div class="text-danger small mt-1">Le prix doit être strictement supérieur à 0.</div>
+              }
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-medium small text-slate">Classe Thérapeutique</label>
+              <input type="text" class="form-control" formControlName="classe" placeholder="Ex: Antalgique" [ngClass]="{'is-invalid': medicamentForm.get('classe')?.invalid && medicamentForm.get('classe')?.touched}">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-top px-4 py-3 bg-light rounded-bottom-4">
+          <button type="button" class="btn btn-outline-secondary fw-semibold" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-emerald fw-semibold px-4">{{ isEditMode() ? 'Sauvegarder' : 'Créer le Produit' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Stock Drill-down Modal -->
+<div class="modal fade" id="viewStockModal" tabindex="-1" aria-labelledby="viewStockModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-bottom bg-slate text-white rounded-top-4 px-4 py-3" style="background-color: #1e293b;">
+        <h5 class="modal-title fw-bold" id="viewStockModalLabel">
+          Intelligence des Lots : <span class="text-emerald fst-italic">{{ selectedMedicamentName() }}</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light text-muted small text-uppercase" style="letter-spacing: 0.5px;">
+              <tr>
+                <th class="ps-4 py-3">Numéro Lot</th>
+                <th class="py-3 text-center">Volume Restant</th>
+                <th class="py-3">Date Expiration</th>
+                <th class="pe-4 py-3">État Critique</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (stock of selectedMedicamentStocks(); track stock.id) {
+                <tr>
+                  <td class="ps-4 fw-bold text-dark">{{ stock.lotId }}</td>
+                  <td class="text-center fw-semibold">{{ stock.quantite }}</td>
+                  <td>
+                    @if (isExpiringSoon(stock.dateExpiration)) {
+                      <span class="text-danger fw-bold d-flex align-items-center gap-1">
+                        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        {{ stock.dateExpiration | date:'dd MMM yyyy' }}
+                      </span>
+                    } @else {
+                      <span class="text-secondary">{{ stock.dateExpiration | date:'dd MMM yyyy' }}</span>
+                    }
+                  </td>
+                  <td class="pe-4 d-flex align-items-center justify-content-between">
+                    @if (isExpiringSoon(stock.dateExpiration)) {
+                      <span class="badge bg-danger flex-shrink-0 me-2">Urgente : Expiration Info</span>
+                    } @else if (stock.quantite === 0) {
+                      <span class="badge bg-secondary flex-shrink-0 me-2">Lot Épuisé</span>
+                    } @else {
+                      <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 flex-shrink-0 me-2">Stock Bon</span>
+                    }
+
+                    @if (isAdmin()) {
+                      <button class="btn btn-sm action-btn text-warning bg-light border ms-auto" data-bs-toggle="modal" data-bs-target="#adjustStockModal" (click)="openAdjustModal(stock)" title="Ajuster Manuellement">
+                         <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line>
+                         </svg>
+                      </button>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4" class="text-center py-5">
+                    <div class="text-muted d-flex flex-column align-items-center">
+                      <svg style="width: 32px; height: 32px; opacity: 0.5; margin-bottom: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
+                      </svg>
+                      Relevé comptable nul. Aucun lot identifié.
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer bg-light rounded-bottom-4 border-top">
+        <button type="button" class="btn btn-outline-dark fw-semibold" data-bs-dismiss="modal">Fermeture</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Adjust Stock Modal -->
+<div class="modal fade" id="adjustStockModal" tabindex="-1" aria-labelledby="adjustStockModalLabel" aria-hidden="true" style="z-index: 1060;">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+       <div class="modal-header border-bottom bg-warning bg-opacity-10 px-4 py-3">
+         <h6 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+            <svg style="width: 18px; height: 18px;" class="text-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line></svg>
+            Ajustement Lot {{ selectedStockForAdjust()?.lotId }}
+         </h6>
+         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+       </div>
+       <form [formGroup]="stockAdjustForm" (ngSubmit)="onSubmitAdjustStock()">
+          <div class="modal-body p-4">
+             
+             <div class="mb-3">
+                <label class="form-label fw-medium small text-muted">Nouvelle Quantité Physique</label>
+                <input type="number" class="form-control text-center fw-bold fs-5 text-dark" formControlName="quantite" [ngClass]="{'is-invalid': stockAdjustForm.get('quantite')?.invalid && stockAdjustForm.get('quantite')?.touched}">
+             </div>
+
+             <div>
+                <label class="form-label fw-medium small text-muted">Justification (Audit)</label>
+                <textarea class="form-control" rows="2" placeholder="Ex: Casse, inventaire périmé, retour..." formControlName="motif" [ngClass]="{'is-invalid': stockAdjustForm.get('motif')?.invalid && stockAdjustForm.get('motif')?.touched}"></textarea>
+                @if (stockAdjustForm.get('motif')?.hasError('minlength') && stockAdjustForm.get('motif')?.touched) {
+                   <div class="text-danger small mt-1">Le motif doit être explicite (5 car. min).</div>
+                }
+             </div>
+
+          </div>
+          <div class="modal-footer p-3 border-top bg-light rounded-bottom-4">
+             <button type="button" class="btn btn-light btn-sm fw-medium" data-bs-dismiss="modal">Annuler</button>
+             <button type="submit" class="btn btn-warning fw-bold btn-sm shadow-sm" [disabled]="isSubmittingAdjust()">
+                @if (isSubmittingAdjust()) {
+                   <span class="spinner-border spinner-border-sm me-1"></span> Exécution...
+                } @else {
+                   Mettre à jour & Tracer
+                }
+             </button>
+          </div>
+       </form>
+    </div>
+  </div>
+</div>
+
+<!-- SVG Assets Container for Errors (Hidden) -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="exclamation-triangle-fill" fill="currentColor" viewBox="0 0 16 16">
+    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+  </symbol>
+</svg>

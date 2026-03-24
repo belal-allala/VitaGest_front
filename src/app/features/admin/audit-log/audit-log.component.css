@@ -1,0 +1,13 @@
+.custom-audit-table th {
+  border-bottom-width: 1px !important;
+}
+.custom-audit-table tbody tr {
+  transition: all 0.2s ease;
+}
+.custom-audit-table tbody tr:hover {
+  background-color: #1e293b !important; /* Tailwind Slate 800 */
+}
+
+input::placeholder {
+  color: #64748b !important; /* Slate 500 */
+}
