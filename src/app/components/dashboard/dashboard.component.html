@@ -1,0 +1,140 @@
+<section class="dashboard-page">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <h1 class="h4 mb-1 text-slate">Tableau de bord analytique</h1>
+      <p class="mb-0 text-muted">Vue globale de l’activité de la pharmacie VitaGest</p>
+    </div>
+    <button class="btn btn-outline-success btn-sm" (click)="refreshDashboard()">
+      Actualiser
+    </button>
+  </div>
+
+  @if (state().loading) {
+    <div class="glass-card p-4 text-center mb-4">
+      <div class="spinner-border text-success mb-3" role="status" aria-hidden="true"></div>
+      <p class="mb-0 text-muted">Chargement des données du dashboard...</p>
+    </div>
+  } @else if (state().error) {
+    <div class="alert alert-danger d-flex justify-content-between align-items-center mb-4" role="alert">
+      <span>{{ state().error }}</span>
+      <button class="btn btn-sm btn-outline-danger" (click)="refreshDashboard()">Réessayer</button>
+    </div>
+  } @else {
+    <!-- KPI cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-md-6 col-xl-3">
+        <article class="kpi-card glass-card kpi-success h-100">
+          <p class="kpi-title mb-1">Chiffre d’affaires total</p>
+          <h3 class="kpi-value mb-0">{{ totalRevenue() | currency:'MAD ':'symbol':'1.0-0' }}</h3>
+        </article>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3">
+        <article class="kpi-card glass-card kpi-info h-100">
+          <p class="kpi-title mb-1">Nombre de transactions</p>
+          <h3 class="kpi-value mb-0">{{ transactionCount() | number }}</h3>
+        </article>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3">
+        <article class="kpi-card glass-card kpi-warning h-100">
+          <p class="kpi-title mb-1">Ruptures critiques</p>
+          <h3 class="kpi-value mb-0">{{ criticalStockouts() | number }}</h3>
+        </article>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3">
+        <article class="kpi-card glass-card kpi-danger h-100">
+          <p class="kpi-title mb-1">Alertes d’expiration (90j)</p>
+          <h3 class="kpi-value mb-0">{{ expirationAlerts() | number }}</h3>
+        </article>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-lg-8">
+        <article class="glass-card p-3 h-100">
+          <h2 class="h6 mb-3 text-slate">Sales Trend</h2>
+          <div class="chart-wrapper">
+            <canvas
+              baseChart
+              [type]="'line'"
+              [data]="salesTrendData()"
+              [options]="lineChartOptions"
+            ></canvas>
+          </div>
+        </article>
+      </div>
+      <div class="col-12 col-lg-4">
+        <article class="glass-card p-3 h-100">
+          <h2 class="h6 mb-3 text-slate">Stock Distribution</h2>
+          <div class="chart-wrapper">
+            <canvas
+              baseChart
+              [type]="'doughnut'"
+              [data]="stockDistributionData()"
+              [options]="doughnutChartOptions"
+            ></canvas>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <!-- Recent activity -->
+    <div class="row g-3">
+      <div class="col-12 col-lg-8">
+        <article class="glass-card p-3 h-100">
+          <h2 class="h6 mb-3 text-slate">Top 5 Médicaments les plus vendus</h2>
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Médicament</th>
+                  <th class="text-end">Quantité vendue</th>
+                  <th class="text-end">CA généré</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of topSellingMedicines(); track item.name) {
+                  <tr>
+                    <td>{{ item.name }}</td>
+                    <td class="text-end">{{ item.quantitySold | number }}</td>
+                    <td class="text-end">{{ item.revenue | currency:'MAD ':'symbol':'1.0-0' }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="3" class="text-center text-muted py-4">Aucune vente disponible.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+
+      <div class="col-12 col-lg-4">
+        <article class="glass-card p-3 h-100">
+          <h2 class="h6 mb-3 text-slate">5 transactions récentes</h2>
+          <div class="activity-feed">
+            @for (transaction of recentTransactions(); track transaction.id ?? $index) {
+              <div class="activity-item">
+                <div class="activity-dot"></div>
+                <div class="activity-content">
+                  <div class="fw-semibold text-slate">
+                    Vente #{{ transaction.id ?? '-' }}
+                  </div>
+                  <small class="text-muted">
+                    {{ transaction.dateVente ? (transaction.dateVente | date:'dd/MM/yyyy HH:mm') : 'Date inconnue' }}
+                  </small>
+                </div>
+                <div class="fw-semibold text-success">
+                  {{ transaction.totalTTC | currency:'MAD ':'symbol':'1.0-0' }}
+                </div>
+              </div>
+            } @empty {
+              <p class="text-muted mb-0">Aucune transaction récente.</p>
+            }
+          </div>
+        </article>
+      </div>
+    </div>
+  }
+</section>
