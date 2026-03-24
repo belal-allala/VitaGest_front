@@ -1,0 +1,93 @@
+<header
+  class="d-flex align-items-center justify-content-between px-3 px-sm-4 px-lg-5 border-bottom bg-white shadow-sm"
+  style="height: 64px;"
+>
+  <!-- Left: burger + breadcrumb / title -->
+  <div class="d-flex align-items-center gap-2">
+    <!-- Mobile burger -->
+    <button
+      type="button"
+      class="btn btn-outline-secondary d-inline-flex d-lg-none align-items-center justify-content-center p-2 me-2"
+      (click)="onToggleSidebar()"
+      aria-label="Ouvrir le menu"
+    >
+      <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M4 7h16M4 12h16M4 17h16"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        />
+      </svg>
+    </button>
+
+    <div class="d-flex flex-column">
+      <span class="small text-muted">VitaGest</span>
+      <span class="fw-semibold">
+        {{ currentTitle }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Right: actions -->
+  <div class="d-flex align-items-center gap-3">
+    <!-- Notifications -->
+    <button
+      type="button"
+      class="btn btn-light position-relative rounded-circle d-inline-flex align-items-center justify-content-center p-0"
+      style="width: 36px; height: 36px;"
+      aria-label="Notifications"
+    >
+      <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M18 16v-5a6 6 0 1 0-12 0v5"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M5 16h14"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+        <path
+          d="M10 19a2 2 0 0 0 4 0"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <span
+        class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-success border border-white"
+        style="width: 10px; height: 10px; padding: 0;"
+      ></span>
+    </button>
+
+    <!-- Profile -->
+    <div
+      class="d-flex align-items-center gap-2 rounded-pill border bg-white px-2 py-1 shadow-sm"
+    >
+      <div
+        class="d-flex align-items-center justify-content-center rounded-circle bg-success text-white fw-semibold"
+        style="width: 32px; height: 32px; font-size: 0.8rem;"
+      >
+        P
+      </div>
+      <div class="d-none d-sm-flex flex-column text-start">
+        <span class="small fw-semibold text-dark">Pharmacien</span>
+        <span class="small text-muted">Admin</span>
+      </div>
+      <button
+        type="button"
+        class="btn btn-outline-success btn-sm ms-1"
+        (click)="onLogout()"
+      >
+        Déconnexion
+      </button>
+    </div>
+  </div>
+</header>
+
