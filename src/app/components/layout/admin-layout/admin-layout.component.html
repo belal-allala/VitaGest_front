@@ -1,0 +1,43 @@
+<div class="d-flex vh-100 bg-light">
+  <!-- Sidebar desktop -->
+  <app-sidebar
+    class="d-none d-lg-flex flex-column flex-shrink-0"
+    style="width: 260px;"
+  ></app-sidebar>
+
+  <!-- Sidebar mobile (overlay) -->
+  <div
+    class="position-fixed top-0 start-0 w-100 h-100 d-flex d-lg-none"
+    *ngIf="isSidebarOpen"
+    style="z-index: 1040;"
+  >
+    <!-- Backdrop -->
+    <div
+      class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
+      (click)="closeSidebar()"
+    ></div>
+
+    <!-- Sidebar panel -->
+    <div
+      class="position-relative bg-dark h-100 shadow-lg"
+      style="width: 260px; z-index: 1050;"
+    >
+      <app-sidebar></app-sidebar>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="d-flex flex-column flex-grow-1 min-vh-100 overflow-hidden">
+    <!-- Navbar -->
+    <app-navbar
+      (toggleSidebar)="toggleSidebar()"
+    ></app-navbar>
+
+    <!-- Page content -->
+    <main class="flex-grow-1 overflow-auto bg-light">
+      <div class="container-fluid py-3">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+</div>
