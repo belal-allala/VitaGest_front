@@ -1,0 +1,34 @@
+﻿[33m❯[39m Building...
+[32m✔[39m Building...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m                      [2m | [22m [1mRaw size[22m
+[32mchunk-JCDCVEJN.js[39m  [2m | [22m[2m-[22m                          [2m | [22m  [36m1.12 MB[39m[2m | [22m
+[32mstyles.css[39m         [2m | [22m[2mstyles[22m                     [2m | [22m[36m276.89 kB[39m[2m | [22m
+[32mchunk-52SNXZDO.js[39m  [2m | [22m[2m-[22m                          [2m | [22m[36m268.71 kB[39m[2m | [22m
+[32mpolyfills.js[39m       [2m | [22m[2mpolyfills[22m                  [2m | [22m [36m89.77 kB[39m[2m | [22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m                       [2m | [22m [36m43.08 kB[39m[2m | [22m
+[32mchunk-YJACSMS4.js[39m  [2m | [22m[2m-[22m                          [2m | [22m  [36m2.86 kB[39m[2m | [22m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m              [2m | [22m  [1m1.80 MB[22m
+
+[1mLazy chunk files[22m   [2m | [22m[1mNames[22m                      [2m | [22m [1mRaw size[22m
+[32mchunk-IAIDWPOT.js[39m  [2m | [22m[2mdashboard-component[22m        [2m | [22m[36m326.78 kB[39m[2m | [22m
+[32mchunk-JM4CDHVH.js[39m  [2m | [22m[2m-[22m                          [2m | [22m[36m224.13 kB[39m[2m | [22m
+[32mchunk-P3HKLYXU.js[39m  [2m | [22m[2mclient-list-component[22m      [2m | [22m[36m109.95 kB[39m[2m | [22m
+[32mchunk-RRBQE44O.js[39m  [2m | [22m[2mmedicament-list-component[22m  [2m | [22m [36m71.94 kB[39m[2m | [22m
+[32mchunk-NQVXBUWP.js[39m  [2m | [22m[2muser-management-component[22m  [2m | [22m [36m63.52 kB[39m[2m | [22m
+[32mchunk-5VEKD5Y2.js[39m  [2m | [22m[2mcommande-list-component[22m    [2m | [22m [36m62.51 kB[39m[2m | [22m
+[32mchunk-RSPKT335.js[39m  [2m | [22m[2mprescription-list-component[22m[2m | [22m [36m44.35 kB[39m[2m | [22m
+[32mchunk-ZFJDGF65.js[39m  [2m | [22m[2mpoint-de-vente-component[22m   [2m | [22m [36m41.34 kB[39m[2m | [22m
+[32mchunk-AJYNLAFG.js[39m  [2m | [22m[2mstock-list-component[22m       [2m | [22m [36m38.95 kB[39m[2m | [22m
+[32mchunk-NNPQQHVZ.js[39m  [2m | [22m[2mfournisseur-list-component[22m [2m | [22m [36m26.13 kB[39m[2m | [22m
+[32mchunk-GRVCZFVZ.js[39m  [2m | [22m[2maudit-log-component[22m        [2m | [22m [36m26.11 kB[39m[2m | [22m
+[32mchunk-IDMGPOXZ.js[39m  [2m | [22m[2mlogin-component[22m            [2m | [22m [36m12.72 kB[39m[2m | [22m
+[32mchunk-JCKRAUIX.js[39m  [2m | [22m[2m-[22m                          [2m | [22m  [36m5.56 kB[39m[2m | [22m
+[32mchunk-2I2VCL2N.js[39m  [2m | [22m[2m-[22m                          [2m | [22m  [36m3.27 kB[39m[2m | [22m
+[32mchunk-TLJNUE4K.js[39m  [2m | [22m[2m-[22m                          [2m | [22m  [36m2.80 kB[39m[2m | [22m
+[2m...and 4 more lazy chunks files. Use "--verbose" to show all the files.[22m
+
+Application bundle generation complete. [3.977 seconds]
+
+Output location: D:\youcode\front_fil_rouge\dist\front_fil_rouge
+
