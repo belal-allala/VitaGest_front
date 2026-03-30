@@ -1,65 +1,58 @@
-<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light">
-  <div class="row w-100 justify-content-center">
-    <div class="col-12 col-sm-8 col-md-6 col-lg-4 col-xl-3">
-      
-      <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-header bg-success text-white text-center rounded-top-4 py-4 border-0">
-          <svg style="width: 48px; height: 48px; margin-bottom: 0.5rem;" viewBox="0 0 24 24" fill="none">
-             <path d="M12 2v20M17 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-             <path d="M9 12h6M12 9v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <h4 class="mb-0 fw-semibold">VitaGest</h4>
-          <p class="mb-0 small text-white-50">Accès Professionnel</p>
+<div class="login-container">
+  <div class="login-card">
+    <div class="text-center">
+      <div class="brand-logo">
+        VG
+      </div>
+      <h2 class="login-title">VitaGest</h2>
+      <p class="login-subtitle">Système de Gestion Pharmaceutique</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      @if (errorMessage) {
+        <div class="alert alert-modern mb-4 d-flex align-items-center gap-2">
+          <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          {{ errorMessage }}
         </div>
-        
-        <div class="card-body p-4 p-sm-5">
-          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-            
-            <div *ngIf="errorMessage" class="alert alert-danger d-flex align-items-center mb-4" role="alert">
-              <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
-              <div>{{ errorMessage }}</div>
-            </div>
+      }
 
-            <div class="mb-3">
-              <label for="email" class="form-label fw-medium">Email</label>
-              <input 
-                type="email" 
-                class="form-control" 
-                id="email" 
-                formControlName="email"
-                [ngClass]="{'is-invalid': loginForm.get('email')?.invalid && loginForm.get('email')?.touched}"
-                placeholder="Entrez votre adresse email"
-              >
-              <div class="invalid-feedback">
-                Un email valide est requis.
-              </div>
-            </div>
-
-            <div class="mb-4">
-              <label for="password" class="form-label fw-medium">Mot de passe</label>
-              <input 
-                type="password" 
-                class="form-control" 
-                id="password" 
-                formControlName="password"
-                [ngClass]="{'is-invalid': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}"
-                placeholder="Entrez votre mot de passe"
-              >
-              <div class="invalid-feedback">
-                Le mot de passe est requis.
-              </div>
-            </div>
-
-            <button type="submit" class="btn btn-success w-100 py-2 fw-semibold" [disabled]="isLoading">
-              <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              {{ isLoading ? 'Connexion en cours...' : 'Se connecter' }}
-            </button>
-            
-          </form>
+      <div class="mb-4">
+        <label class="form-label">ADRESSE EMAIL Professionnelle</label>
+        <div class="position-relative">
+          <input 
+            type="email" 
+            class="form-control form-control-dark ps-2" 
+            formControlName="email"
+            placeholder="nom@vitagest.com"
+            [ngClass]="{'is-invalid': loginForm.get('email')?.invalid && loginForm.get('email')?.touched}"
+          >
         </div>
       </div>
 
-    </div>
+      <div class="mb-5">
+        <label class="form-label">MOT DE PASSE SÉCURISÉ</label>
+        <div class="position-relative">
+          <input 
+            type="password" 
+            class="form-control form-control-dark ps-2" 
+            formControlName="password"
+            placeholder="••••••••"
+            [ngClass]="{'is-invalid': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}"
+          >
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-login w-100 d-flex align-items-center justify-content-center gap-2" [disabled]="isLoading">
+        @if (isLoading) {
+          <span class="spinner-border spinner-border-sm" role="status"></span>
+        }
+        {{ isLoading ? 'Authentification...' : 'Accéder au Système' }}
+      </button>
+
+      <div class="mt-4 text-center">
+        <span class="text-secondary small">© 2026 VitaGest Smart Pharma. Tous droits réservés.</span>
+      </div>
+    </form>
   </div>
 </div>
 

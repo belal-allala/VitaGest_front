@@ -35,7 +35,11 @@ export class CommandeService {
   }
 
   recevoirCommande(id: number): Observable<Commande> {
-    return this.http.post<Commande>(`${this.apiUrl}/${id}/recevoir`, {}).pipe(catchError(this.handleError));
+    return this.http.post<Commande>(`${this.apiUrl}/${id}/reception`, {}).pipe(catchError(this.handleError));
+  }
+
+  validerCommande(id: number): Observable<Commande> {
+    return this.http.post<Commande>(`${this.apiUrl}/${id}/valider`, {}).pipe(catchError(this.handleError));
   }
 
   private handleError(error: HttpErrorResponse) {

@@ -58,7 +58,7 @@ export class ClientListComponent implements OnInit {
     return this.clients().filter(c =>
       `${c.nom} ${c.prenom}`.toLowerCase().includes(term) ||
       (c.email?.toLowerCase().includes(term) ?? false) ||
-      (c.telephone?.includes(term) ?? false)
+      (c.tel?.includes(term) ?? false)
     );
   });
 
@@ -76,11 +76,8 @@ export class ClientListComponent implements OnInit {
       nom:            ['', [Validators.required, Validators.minLength(2)]],
       prenom:         ['', [Validators.required, Validators.minLength(2)]],
       email:          ['', [Validators.required, Validators.email]],
-      telephone:      ['', [Validators.pattern(/^\+?[\d\s\-]{8,15}$/)]],
-      dateNaissance:  [''],
-      allergies:      [''],   // comma-separated string, converted on save
-      antecedents:    [''],
-      pointsFidelite: ['', [Validators.min(0)]],
+      tel:            ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      allergies:      [''],   // string, converted on save
       gdprConsent:    [false, [Validators.requiredTrue]],
     });
   }
@@ -112,8 +109,8 @@ export class ClientListComponent implements OnInit {
     this.editingId.set(client.id ?? null);
     this.clientForm.patchValue({
       ...client,
-      allergies: this.getAllergiesText(client),
-      gdprConsent: true,
+      allergies: client.allergies || '',
+      gdprConsent: client.consentRgpd || false,
     });
     this.showDossierModal.set(false);
     this.showClientModal.set(true);
@@ -134,13 +131,9 @@ export class ClientListComponent implements OnInit {
       nom:            raw.nom,
       prenom:         raw.prenom,
       email:          raw.email,
-      telephone:      raw.telephone,
-      dateNaissance:  raw.dateNaissance || undefined,
-      allergies:      raw.allergies
-        ? (raw.allergies as string).split(',').map((a: string) => a.trim()).filter((a: string) => !!a)
-        : [],
-      antecedents:    raw.antecedents || undefined,
-      pointsFidelite: raw.pointsFidelite ? +raw.pointsFidelite : 0,
+      tel:            raw.tel,
+      allergies:      raw.allergies || undefined,
+      consentRgpd:    raw.gdprConsent,
     };
 
     this.isSaving.set(true);
@@ -226,17 +219,16 @@ export class ClientListComponent implements OnInit {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
   hasAllergies(client: Client): boolean {
-    return this.getAllergiesArray(client).length > 0;
+    return !!client.allergies && client.allergies.trim().length > 0;
   }
 
   getAllergiesArray(client: Client): string[] {
     if (!client.allergies) return [];
-    if (Array.isArray(client.allergies)) return client.allergies;
-    return String(client.allergies).split(',').map(a => a.trim()).filter(a => !!a);
+    return client.allergies.split(',').map(a => a.trim()).filter(a => !!a);
   }
 
   getAllergiesText(client: Client): string {
-    return this.getAllergiesArray(client).join(', ');
+    return client.allergies || '';
   }
 
   formatDate(date?: string): string {
@@ -244,7 +236,8 @@ export class ClientListComponent implements OnInit {
     return new Date(date).toLocaleDateString('fr-FR');
   }
 
-  formatCurrency(value: number): string {
+  formatCurrency(value: number | undefined): string {
+    if (value === undefined) return '0,00 MAD';
     return value.toLocaleString('fr-MA', { style: 'currency', currency: 'MAD' });
   }
 

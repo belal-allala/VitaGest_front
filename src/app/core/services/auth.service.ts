@@ -48,6 +48,11 @@ export class AuthService {
       );
   }
 
+  register(userData: any): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, userData)
+      .pipe(catchError(this.handleError));
+  }
+
   logout() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('currentUser');
@@ -70,29 +75,26 @@ export class AuthService {
 
   getRole(): string | null {
     const user = this.currentUserValue;
-    if (user && user.token) {
-      try {
-        const payload = JSON.parse(atob(user.token.split('.')[1]));
-        
-        // Handle Spring Security 'roles' array
-        if (payload.roles && Array.isArray(payload.roles) && payload.roles.length > 0) {
-             const r = payload.roles[0];
-             return typeof r === 'string' ? r : (r.authority || r.nom || null);
+    if (user) {
+      // Prioritize role property in user object
+      if (user.role) {
+        return user.role;
+      }
+      
+      if (user.token) {
+        try {
+          // Fallback to token decoding
+          const payload = JSON.parse(atob(user.token.split('.')[1]));
+          
+          if (payload.role) {
+            return typeof payload.role === 'string' ? payload.role : (payload.role.authority || payload.role.nom || null);
+          }
+          if (payload.roles && Array.isArray(payload.roles) && payload.roles.length > 0) {
+            return typeof payload.roles[0] === 'string' ? payload.roles[0] : (payload.roles[0].authority || payload.roles[0].nom || null);
+          }
+        } catch (e) {
+          console.error('Error decoding token', e);
         }
-        // Handle Spring Security 'authorities' array
-        if (payload.authorities && Array.isArray(payload.authorities) && payload.authorities.length > 0) {
-             const auth = payload.authorities[0];
-             return typeof auth === 'string' ? auth : (auth.authority || auth.nom || null);
-        }
-        // Handle flat 'role' (string or object)
-        if (payload.role) {
-             return typeof payload.role === 'string' ? payload.role : (payload.role.authority || payload.role.nom || null);
-        }
-
-        return null;
-      } catch (e) {
-        console.error('Error decoding token', e);
-        return null;
       }
     }
     return null;

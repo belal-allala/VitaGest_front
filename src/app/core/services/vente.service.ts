@@ -36,9 +36,8 @@ export class VenteService {
 
   getVentesByUser(userId: number): Observable<Vente[]> {
     return this.getAllVentes().pipe(
-      map(ventes => ventes.filter(v => v.utilisateurId === userId)),
+      map(ventes => ventes.filter(v => v.vendeurId === userId)),
       catchError(() => of([]))
     );
   }
 }
-

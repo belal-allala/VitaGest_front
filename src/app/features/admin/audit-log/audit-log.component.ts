@@ -26,15 +26,15 @@ export class AuditLogComponent implements OnInit {
     let currentAudits = this.audits();
 
     if (type !== 'ALL') {
-      currentAudits = currentAudits.filter((a: AuditLog) => a.actionType === type);
+      currentAudits = currentAudits.filter((a: AuditLog) => a.action === type);
     }
 
     if (!term) return currentAudits;
 
     return currentAudits.filter((a: AuditLog) => 
-      a.acteurEmail.toLowerCase().includes(term) || 
-      a.entiteCible.toLowerCase().includes(term) ||
-      a.details.toLowerCase().includes(term)
+      (a.userName || '').toLowerCase().includes(term) || 
+      (a.entity || '').toLowerCase().includes(term) ||
+      (a.details || '').toLowerCase().includes(term)
     );
   });
 
@@ -68,14 +68,26 @@ export class AuditLogComponent implements OnInit {
     this.filterType.set(type);
   }
 
-  getActionBadgeClass(actionType: AuditActionType): string {
-    switch (actionType) {
-      case 'DELETION': return 'bg-danger text-white px-2 py-1 rounded fw-bold small';
-      case 'PRICE_CHANGE': return 'bg-warning text-dark px-2 py-1 rounded fw-bold small';
-      case 'STOCK_ADJUSTMENT': return 'bg-info text-dark px-2 py-1 rounded fw-bold small';
-      case 'LOGIN': return 'bg-light text-muted border px-2 py-1 rounded small fw-medium';
-      case 'MODIFICATION': return 'bg-primary bg-opacity-10 text-primary border px-2 py-1 rounded small fw-medium';
-      default: return 'bg-success bg-opacity-10 text-success border px-2 py-1 rounded small fw-medium';
+  getActionBadgeClass(action: string): string {
+    const a = (action || '').toUpperCase();
+    if (a.includes('DELETE') || a.includes('DELETION')) {
+      return 'bg-danger text-white px-2 py-1 rounded fw-bold small';
     }
+    if (a.includes('PRICE_CHANGE')) {
+      return 'bg-warning text-dark px-2 py-1 rounded fw-bold small';
+    }
+    if (a.includes('STOCK_ADJUSTMENT')) {
+      return 'bg-info text-dark px-2 py-1 rounded fw-bold small';
+    }
+    if (a.includes('LOGIN')) {
+      return 'bg-light text-muted border px-2 py-1 rounded small fw-medium';
+    }
+    if (a.includes('UPDATE') || a.includes('MODIFICATION') || a.includes('VALIDATION') || a.includes('RECEPTION')) {
+      return 'bg-primary bg-opacity-10 text-primary border px-2 py-1 rounded small fw-medium';
+    }
+    if (a.includes('CREATE') || a.includes('CREATION')) {
+      return 'bg-success bg-opacity-10 text-success border px-2 py-1 rounded small fw-medium';
+    }
+    return 'bg-secondary bg-opacity-10 text-secondary border px-2 py-1 rounded small fw-medium';
   }
 }

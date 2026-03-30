@@ -13,58 +13,91 @@
     </div>
   }
 
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-    <div>
-      <h2 class="fw-bold mb-0 text-slate">Supervision globale des lots</h2>
-      <p class="text-muted small mb-0">Vue temps réel du stock pharmacie et ajustements rapides</p>
+  <!-- Intelligence Header -->
+  <div class="row align-items-center mb-5 g-4 header-premium">
+    <div class="col-12 col-md-8">
+      <div class="d-flex align-items-center gap-3 mb-1">
+        <div class="header-icon-box shadow-sm bg-white text-emerald">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+        </div>
+        <div>
+          <h2 class="fw-black mb-0 text-slate tracking-tight text-white-shadow">Supervision des Lots</h2>
+        </div>
+      </div>
+      <p class="text-muted fw-medium small-caps ps-5 ms-3 opacity-75">Vue temps réel du stock & intelligence prédictive des expirations.</p>
     </div>
-    <button class="btn btn-outline-success" (click)="refresh()">Actualiser</button>
+    <div class="col-12 col-md-4 text-md-end">
+      <button class="btn btn-emerald-gradient px-4 py-2 shadow-sm border-0 d-inline-flex align-items-center gap-2" (click)="refresh()">
+        <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        <span class="fw-bold">Actualiser</span>
+      </button>
+    </div>
   </div>
 
-  <div class="card border-0 shadow-sm rounded-4 mb-3">
-    <div class="card-body d-flex flex-column flex-lg-row gap-3 align-items-lg-center">
-      <div class="input-group flex-grow-1">
-        <span class="input-group-text bg-white">Recherche</span>
-        <input
-          type="text"
-          class="form-control"
-          placeholder="Médicament ou lot ID..."
-          [ngModel]="searchTerm()"
-          (ngModelChange)="searchTerm.set($event)"
-        />
+  <!-- Smart filtering bar -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4 filter-premium-bar overflow-hidden">
+    <div class="card-body p-3 d-flex flex-column flex-lg-row gap-3 align-items-lg-center bg-white shadow-card-inset">
+      <div class="search-wrapper shadow-none flex-grow-1 mb-0 border bg-light bg-opacity-50">
+        <input type="text" class="form-control border-0 bg-transparent py-2 ps-4" placeholder="Rechercher par Médicament ou Lot ID..."
+               [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
+        <div class="search-icon">
+          <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </div>
       </div>
+      
       <div class="d-flex flex-wrap gap-2">
-        <button class="btn btn-sm" [ngClass]="activeFilter() === 'ALL' ? 'btn-dark' : 'btn-outline-dark'" (click)="setFilter('ALL')">All</button>
-        <button class="btn btn-sm" [ngClass]="activeFilter() === 'EXPIRED' ? 'btn-danger' : 'btn-outline-danger'" (click)="setFilter('EXPIRED')">Expired</button>
-        <button class="btn btn-sm" [ngClass]="activeFilter() === 'LOW' ? 'btn-warning' : 'btn-outline-warning'" (click)="setFilter('LOW')">Low Stock</button>
-        <button class="btn btn-sm" [ngClass]="activeFilter() === 'NEAR_EXPIRY' ? 'btn-info text-white' : 'btn-outline-info'" (click)="setFilter('NEAR_EXPIRY')">Near Expiry</button>
+        <button class="btn btn-filter" [class.active]="activeFilter() === 'ALL'" (click)="setFilter('ALL')">Tous les lots</button>
+        <button class="btn btn-filter btn-filter-danger" [class.active]="activeFilter() === 'EXPIRED'" (click)="setFilter('EXPIRED')">Expirés</button>
+        <button class="btn btn-filter btn-filter-warning" [class.active]="activeFilter() === 'LOW'" (click)="setFilter('LOW')">Stock Bas</button>
+        <button class="btn btn-filter btn-filter-info" [class.active]="activeFilter() === 'NEAR_EXPIRY'" (click)="setFilter('NEAR_EXPIRY')">Expiration < 90j</button>
       </div>
     </div>
   </div>
 
-  <div class="row g-3 mb-4">
+  <!-- Dashboard KPIs -->
+  <div class="row g-4 mb-5 dashboard-stats">
     <div class="col-12 col-md-6 col-xl-3">
-      <div class="kpi-card kpi-emerald">
-        <div class="kpi-label">Valeur stock globale</div>
-        <div class="kpi-value">{{ totalInventoryValue() | currency:'MAD ':'symbol':'1.0-0' }}</div>
+      <div class="stat-card stat-emerald border-0 shadow-sm h-100">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+          <div>
+            <div class="stat-label">Valeur Globale</div>
+            <div class="stat-value">{{ totalInventoryValue() | currency:'MAD ':'symbol':'1.0-0' }}</div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="col-12 col-md-6 col-xl-3">
-      <div class="kpi-card kpi-red">
-        <div class="kpi-label">Lots expirés</div>
-        <div class="kpi-value">{{ expiredBatches() }}</div>
+      <div class="stat-card stat-red border-0 shadow-sm h-100">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+          <div>
+            <div class="stat-label">Lots Expirés</div>
+            <div class="stat-value text-danger">{{ expiredBatches() }}</div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="col-12 col-md-6 col-xl-3">
-      <div class="kpi-card kpi-amber">
-        <div class="kpi-label">Alertes stock bas</div>
-        <div class="kpi-value">{{ lowStockAlerts() }}</div>
+      <div class="stat-card stat-amber border-0 shadow-sm h-100">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline><polyline points="7.5 19.79 7.5 14.6 3 12"></polyline><polyline points="21 12 16.5 14.6 16.5 19.79"></polyline><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></div>
+          <div>
+            <div class="stat-label">Alertes Stock Bas</div>
+            <div class="stat-value text-warning">{{ lowStockAlerts() }}</div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="col-12 col-md-6 col-xl-3">
-      <div class="kpi-card kpi-blue">
-        <div class="kpi-label">Expiration sous 90 jours</div>
-        <div class="kpi-value">{{ nearExpiryBatches() }}</div>
+      <div class="stat-card stat-blue border-0 shadow-sm h-100">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+          <div>
+            <div class="stat-label">Expiration < 90 jours</div>
+            <div class="stat-value text-info">{{ nearExpiryBatches() }}</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

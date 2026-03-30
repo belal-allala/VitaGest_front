@@ -7,7 +7,7 @@ import { ClientService } from '../../../core/services/client.service';
 import { VenteService } from '../../../core/services/vente.service';
 import { Medicament } from '../../../core/models/medicament.model';
 import { Client } from '../../../core/models/client.model';
-import { Vente, VenteItem } from '../../../core/models/vente.model';
+import { Vente, VenteLigne } from '../../../core/models/vente.model';
 import { Prescription } from '../../../core/models/prescription.model';
 import { PrescriptionService } from '../../../core/services/prescription.service';
 
@@ -29,7 +29,7 @@ export class PointDeVenteComponent implements OnInit {
   medicaments: Medicament[] = [];
   filteredMedicaments: Medicament[] = [];
   searchQuery = '';
-  
+
   // Clients State
   clients: Client[] = [];
   selectedClientId: number | null = null;
@@ -38,8 +38,18 @@ export class PointDeVenteComponent implements OnInit {
   isLoadingPrescriptions = false;
 
   // Cart State
-  cartItems: VenteItem[] = [];
-  
+  cartItems: VenteLigne[] = [];
+
+  // Payment State
+  paymentMode: 'ESPECES' | 'CARTE' | 'CHEQUE' = 'ESPECES';
+  amountReceived = 0;
+
+  get changeDue(): number {
+    if (this.paymentMode !== 'ESPECES') return 0;
+    const diff = this.amountReceived - this.totalTTC;
+    return diff > 0 ? diff : 0;
+  }
+
   // Feedback State
   alertMessage = '';
   alertType: 'success' | 'danger' | 'warning' = 'success';
@@ -100,17 +110,18 @@ export class PointDeVenteComponent implements OnInit {
       this.filteredMedicaments = this.medicaments;
       return;
     }
-    this.filteredMedicaments = this.medicaments.filter(m => 
+    this.filteredMedicaments = this.medicaments.filter(m =>
       m.nom.toLowerCase().includes(q) || m.dci.toLowerCase().includes(q)
     );
   }
 
   addToCart(med: Medicament) {
     this.clearAlert();
-    
+    this.amountReceived = 0; // Reset prompt
+
     // Check if already in cart
     const existingIndex = this.cartItems.findIndex(item => item.medicamentId === med.id);
-    
+
     if (existingIndex !== -1) {
       // Logic for adding - in a real app you'd check StockService here if you maintained a real-time count.
       // For this step we just increment. The backend will enforce the actual max count.
@@ -130,6 +141,7 @@ export class PointDeVenteComponent implements OnInit {
   incrementQuantity(index: number) {
     this.cartItems[index].quantite++;
     this.clearAlert();
+    this.amountReceived = 0;
   }
 
   decrementQuantity(index: number) {
@@ -139,14 +151,16 @@ export class PointDeVenteComponent implements OnInit {
       this.removeItem(index);
     }
     this.clearAlert();
+    this.amountReceived = 0;
   }
 
   removeItem(index: number) {
     this.cartItems.splice(index, 1);
+    this.amountReceived = 0;
   }
 
   get totalHT(): number {
-    return this.cartItems.reduce((acc, item) => acc + (item.prixUnitaire * item.quantite), 0);
+    return this.cartItems.reduce((acc, item) => acc + (item.prixUnitaire || 0) * item.quantite, 0);
   }
 
   get totalTVA(): number {
@@ -168,19 +182,22 @@ export class PointDeVenteComponent implements OnInit {
 
   submitVente() {
     if (this.cartItems.length === 0) return;
+    if (this.paymentMode === 'ESPECES' && this.amountReceived < this.totalTTC) {
+      this.showAlert('Le montant reçu est insuffisant pour finaliser la vente.', 'warning');
+      return;
+    }
 
     this.isSubmitting = true;
     this.clearAlert();
 
     const ventePayload: Vente = {
-      items: this.cartItems.map(item => ({
+      lignes: this.cartItems.map(item => ({
         medicamentId: item.medicamentId,
         quantite: item.quantite,
         prixUnitaire: item.prixUnitaire
       })),
-      totalHT: this.totalHT,
-      totalTVA: this.totalTVA,
-      totalTTC: this.totalTTC,
+      total: this.totalTTC,
+      mode: this.paymentMode,
       clientId: this.selectedClientId || undefined
     };
 

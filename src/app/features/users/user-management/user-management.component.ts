@@ -3,12 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { User } from '../../../core/models/user.model';
+import { User, Role } from '../../../core/models/user.model';
 import { Vente } from '../../../core/models/vente.model';
 import { VenteService } from '../../../core/services/vente.service';
-import { Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js';
-
-Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 @Component({
   selector: 'app-user-management',
@@ -29,8 +26,8 @@ export class UserManagementComponent implements OnInit {
     const term = this.searchTerm().toLowerCase().trim();
     const allUsers = this.users();
     if (!term) return allUsers;
-    return allUsers.filter(u => 
-      u.email.toLowerCase().includes(term) || 
+    return allUsers.filter(u =>
+      u.email.toLowerCase().includes(term) ||
       u.username.toLowerCase().includes(term) ||
       this.getUserRoleString(u).toLowerCase().includes(term)
     );
@@ -56,11 +53,10 @@ export class UserManagementComponent implements OnInit {
   selectedUserForStats = signal<User | null>(null);
   userVentes = signal<Vente[]>([]);
   isStatsLoading = signal<boolean>(false);
-  chartInstance: Chart | null = null;
 
   totalSalesCount = computed(() => this.userVentes().length);
   revenueGenerated = computed(() => {
-    return this.userVentes().reduce((sum, v) => sum + (v.totalTTC || 0), 0);
+    return this.userVentes().reduce((sum, v) => sum + (v.total || 0), 0);
   });
   averageBasket = computed(() => {
     const count = this.totalSalesCount();
@@ -73,13 +69,13 @@ export class UserManagementComponent implements OnInit {
   });
 
   // UX Toasts
-  toastMessage = signal<{text: string, type: 'success' | 'danger' | 'warning'} | null>(null);
+  toastMessage = signal<{ text: string, type: 'success' | 'danger' | 'warning' } | null>(null);
 
   constructor() {
     this.userForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       username: ['', [Validators.required, Validators.minLength(3)]],
-      password: [''], 
+      password: [''],
       role: ['ROLE_PHARMACIEN', Validators.required],
       isActive: [true]
     });
@@ -145,9 +141,6 @@ export class UserManagementComponent implements OnInit {
       if (typeof user.role === 'string') return user.role;
       if (typeof user.role === 'object' && 'nom' in user.role) return user.role.nom;
     }
-    if (user.roles && Array.isArray(user.roles) && user.roles.length > 0) {
-      return user.roles[0].nom;
-    }
     return 'ROLE_PHARMACIEN';
   }
 
@@ -157,16 +150,32 @@ export class UserManagementComponent implements OnInit {
       return;
     }
 
-    const userData: User = this.userForm.value;
+    const formValue = this.userForm.value;
+    const role: Role = { nom: formValue.role };
+    const userData: Partial<User> = {
+      email: formValue.email,
+      username: formValue.username,
+      role: role,
+      isActive: formValue.isActive,
+    };
+
+    if (formValue.password) {
+      userData.password = formValue.password;
+    }
+
     const currentId = this.currentUserId();
 
+    // Creation vs Edition logic
     if (this.isEditMode() && currentId) {
-      // If password is blank, remove it from payload so backend doesn't overwrite it to empty
-      if (!userData.password) {
-        delete userData.password;
-      }
-      
-      this.userService.updateUser(currentId, userData).subscribe({
+      const role: Role = { nom: formValue.role };
+      const editData: Partial<User> = {
+        email: formValue.email,
+        username: formValue.username,
+        role: role,
+        isActive: formValue.isActive
+      };
+
+      this.userService.updateUser(currentId, editData as User).subscribe({
         next: () => {
           this.loadUsers();
           this.closeModal('addEditUserModal');
@@ -175,13 +184,21 @@ export class UserManagementComponent implements OnInit {
         error: (err) => this.showToast(err.message, 'danger')
       });
     } else {
-      this.userService.createUser(userData).subscribe({
+      // REGISTER (Creation) uses AuthService to handle password hashing at backend
+      const registerData = {
+        email: formValue.email,
+        username: formValue.username,
+        password: formValue.password,
+        role: formValue.role
+      };
+
+      this.authService.register(registerData).subscribe({
         next: () => {
           this.loadUsers();
           this.closeModal('addEditUserModal');
           this.showToast('Compte utilisateur créé avec succès.', 'success');
         },
-        error: (err) => this.showToast(err.message, 'danger')
+        error: (err) => this.showToast(err.message || 'Erreur lors de la création', 'danger')
       });
     }
   }
@@ -201,7 +218,7 @@ export class UserManagementComponent implements OnInit {
     if (!currentId) return;
 
     const payload = { password: this.passwordResetForm.value.newPassword };
-    
+
     this.userService.resetPassword(currentId, payload as Partial<User>).subscribe({
       next: () => {
         this.closeModal('resetPasswordModal');
@@ -246,7 +263,7 @@ export class UserManagementComponent implements OnInit {
   }
 
   // UX Tools
-  
+
   // --- Employee Statistics ---
   openStatsModal(user: User) {
     this.selectedUserForStats.set(user);
@@ -256,7 +273,6 @@ export class UserManagementComponent implements OnInit {
          next: (ventes) => {
            this.userVentes.set(ventes);
            this.isStatsLoading.set(false);
-           setTimeout(() => this.renderChart(), 100);
          },
          error: () => {
            this.isStatsLoading.set(false);
@@ -266,59 +282,13 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
-  renderChart() {
-    if (this.chartInstance) {
-      this.chartInstance.destroy();
-    }
-    const canvas = document.getElementById('userStatsChart') as HTMLCanvasElement;
-    if (!canvas) return;
-
-    const ventes = this.userVentes();
-    const last7Days = Array.from({length: 7}, (_, i) => {
-       const d = new Date();
-       d.setDate(d.getDate() - i);
-       return d.toISOString().split('T')[0];
-    }).reverse();
-
-    const dataPoints = last7Days.map(dateStr => {
-       return ventes.filter(v => v.dateVente?.startsWith(dateStr)).length;
-    });
-
-    this.chartInstance = new Chart(canvas, {
-       type: 'bar',
-       data: {
-          labels: last7Days.map(d => d.slice(5)), // MM-DD format
-          datasets: [{
-             label: 'Ventes',
-             data: dataPoints,
-             backgroundColor: '#10b981',
-             borderRadius: 4
-          }]
-       },
-       options: { 
-         responsive: true, 
-         maintainAspectRatio: false,
-         scales: { 
-           y: { 
-             beginAtZero: true, 
-             ticks: { stepSize: 1, precision: 0 } 
-           } 
-         } 
-       }
-    });
-  }
-
   closeStatsModal() {
-    if (this.chartInstance) {
-      this.chartInstance.destroy();
-      this.chartInstance = null;
-    }
     this.selectedUserForStats.set(null);
     this.userVentes.set([]);
     this.closeModal('statsModal');
   }
   showToast(text: string, type: 'success' | 'danger' | 'warning') {
-    this.toastMessage.set({text, type});
+    this.toastMessage.set({ text, type });
     setTimeout(() => this.toastMessage.set(null), 5000);
   }
 

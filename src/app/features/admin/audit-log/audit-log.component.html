@@ -17,11 +17,11 @@
       <select class="form-select bg-dark border-secondary text-light shadow-sm" [ngModel]="filterType()" (ngModelChange)="onFilter($event)">
          <option value="ALL">Tous les Événements</option>
          <option value="LOGIN">Connexions système</option>
-         <option value="CREATION">Créations</option>
-         <option value="MODIFICATION">Modifications logiques</option>
-         <option value="STOCK_ADJUSTMENT">Ajustements Manuels Stock</option>
-         <option value="PRICE_CHANGE" class="text-warning">Changements de Prix</option>
-         <option value="DELETION" class="text-danger fw-bold">Suppressions Critiques</option>
+         <option value="CREATE">Créations</option>
+         <option value="UPDATE">Modifications</option>
+         <option value="STOCK_ADJUSTMENT">Ajustements Stock</option>
+         <option value="PRICE_CHANGE">Changements de Prix</option>
+         <option value="DELETE">Suppressions</option>
       </select>
 
       <!-- Search Box -->
@@ -71,14 +71,14 @@
 
           @if (!isLoading()) {
             @for (log of filteredAudits(); track log.id) {
-              <tr [ngClass]="{'bg-danger bg-opacity-10': log.actionType === 'DELETION'}">
+              <tr [ngClass]="{'bg-danger bg-opacity-10': log.action === 'DELETE' || log.action === 'DELETION'}">
                 <td class="ps-4 text-secondary" style="font-family: monospace;">
                    <svg style="width: 14px; height: 14px; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                   {{ (log.dateAction | date:'dd/MM/yyyy HH:mm:ss.SSS') || log.dateAction }}
+                   {{ (log.timestamp | date:'dd/MM/yyyy HH:mm:ss.SSS') || log.timestamp }}
                 </td>
                 <td>
-                   <span [class]="getActionBadgeClass(log.actionType)">
-                      {{ log.actionType }}
+                   <span [class]="getActionBadgeClass(log.action)">
+                      {{ log.action }}
                    </span>
                 </td>
                 <td class="fw-medium text-light">
@@ -86,10 +86,10 @@
                       <div class="rounded-circle bg-secondary bg-opacity-25 p-1 d-flex align-items-center justify-content-center">
                          <svg style="width: 12px; height: 12px;" class="text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                       </div>
-                      {{ log.acteurEmail }}
+                      {{ log.userName }}
                    </div>
                 </td>
-                <td class="text-info fw-bold" style="letter-spacing: 0.5px;">{{ log.entiteCible }}</td>
+                <td class="text-info fw-bold" style="letter-spacing: 0.5px;">{{ log.entity }}</td>
                 <td class="pe-4 text-light small opacity-75" style="max-width: 300px;">
                    {{ log.details }}
                 </td>

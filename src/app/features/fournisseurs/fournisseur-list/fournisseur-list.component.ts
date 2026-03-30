@@ -29,7 +29,9 @@ export class FournisseurListComponent implements OnInit {
     this.fournisseurForm = this.fb.group({
       nom: ['', Validators.required],
       email: ['', [Validators.email]],
-      telephone: ['']
+      tel: [''],
+      delaiMoyen: [0],
+      note: [0]
     });
   }
 
@@ -60,14 +62,15 @@ export class FournisseurListComponent implements OnInit {
     }
     this.filteredFournisseurs = this.fournisseurs.filter(f => 
       f.nom.toLowerCase().includes(term) || 
-      (f.email && f.email.toLowerCase().includes(term))
+      (f.email && f.email.toLowerCase().includes(term)) ||
+      (f.tel && f.tel.toLowerCase().includes(term))
     );
   }
 
   openAddModal() {
     this.isEditMode = false;
     this.currentFournisseurId = null;
-    this.fournisseurForm.reset();
+    this.fournisseurForm.reset({ delaiMoyen: 0, note: 0 });
   }
 
   openEditModal(f: Fournisseur) {
@@ -76,7 +79,9 @@ export class FournisseurListComponent implements OnInit {
     this.fournisseurForm.patchValue({
       nom: f.nom,
       email: f.email,
-      telephone: f.telephone
+      tel: f.tel,
+      delaiMoyen: f.delaiMoyen,
+      note: f.note
     });
   }
 

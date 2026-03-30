@@ -55,14 +55,12 @@
       </h1>
       <p class="page-subtitle">{{ filteredClients().length }} patient(s) trouvé(s)</p>
     </div>
-    @if (isAdmin()) {
-      <button class="btn-emerald" (click)="openCreate()">
-        <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none">
-          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-        </svg>
-        + Nouveau Patient
-      </button>
-    }
+    <button class="btn-emerald" (click)="openCreate()">
+      <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      + Nouveau Patient
+    </button>
   </div>
 
   <!-- ── Search Bar ───────────────────────────────────────────── -->
@@ -111,7 +109,6 @@
                 <th>Identité</th>
                 <th>Contact</th>
                 <th class="text-center">Profil Médical</th>
-                <th class="text-center">Fidélité</th>
                 <th class="text-end">Actions</th>
               </tr>
             </thead>
@@ -127,9 +124,6 @@
                       <div class="avatar">{{ client.prenom[0] }}{{ client.nom[0] }}</div>
                       <div>
                         <div class="fw-semibold" style="color:#0f172a;">{{ client.prenom }} {{ client.nom }}</div>
-                        @if (client.dateNaissance) {
-                          <div class="text-muted small">{{ formatDate(client.dateNaissance) }}</div>
-                        }
                       </div>
                     </div>
                   </td>
@@ -145,13 +139,13 @@
                         {{ client.email }}
                       </a>
                     }
-                    @if (client.telephone) {
-                      <a [href]="'tel:' + client.telephone" class="contact-link d-block">
+                    @if (client.tel) {
+                      <a [href]="'tel:' + client.tel" class="contact-link d-block">
                         <svg style="width:12px;height:12px;" viewBox="0 0 24 24" fill="none">
                           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.08 6.08l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.78 17Z"
                             stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                         </svg>
-                        {{ client.telephone }}
+                        {{ client.tel }}
                       </a>
                     }
                   </td>
@@ -167,14 +161,6 @@
                     }
                   </td>
 
-                  <!-- Fidelite -->
-                  <td class="text-center">
-                    <span class="points-badge">
-                      {{ client.pointsFidelite ?? 0 }}
-                      <span class="points-label">pts</span>
-                    </span>
-                  </td>
-
                   <!-- Actions -->
                   <td class="text-end">
                     <div class="action-buttons">
@@ -185,14 +171,14 @@
                         </svg>
                         Dossier
                       </button>
+                      <button class="action-btn btn-edit" (click)="openEdit(client)">
+                        <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Modifier
+                      </button>
                       @if (isAdmin()) {
-                        <button class="action-btn btn-edit" (click)="openEdit(client)">
-                          <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"
-                              stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                          </svg>
-                          Modifier
-                        </button>
                         <button class="action-btn btn-delete" (click)="requestDelete(client.id!)">
                           <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none">
                             <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor"
@@ -212,7 +198,6 @@
     }
   }
 </div>
-
 
 <!-- ══════════════════════════════════════════════════════════ -->
 <!--  ADD / EDIT MODAL (Angular-driven)                         -->
@@ -269,20 +254,12 @@
                 }
               </div>
               <div class="col-md-6">
-                <label class="form-label-styled">Téléphone</label>
-                <input type="tel" formControlName="telephone" class="form-control form-input"
-                  [class.is-invalid]="f['telephone'].invalid && f['telephone'].touched" placeholder="+212 6XX XXX XXX"/>
-                @if (f['telephone'].invalid && f['telephone'].touched) {
-                  <div class="invalid-feedback">Format invalide (8-15 chiffres)</div>
+                <label class="form-label-styled">Téléphone <span class="required">*</span></label>
+                <input type="tel" formControlName="tel" class="form-control form-input"
+                  [class.is-invalid]="f['tel'].invalid && f['tel'].touched" placeholder="Ex: 0612345678"/>
+                @if (f['tel'].invalid && f['tel'].touched) {
+                  <div class="invalid-feedback">10 chiffres requis (Ex: 0600112233)</div>
                 }
-              </div>
-              <div class="col-md-6">
-                <label class="form-label-styled">Date de naissance</label>
-                <input type="date" formControlName="dateNaissance" class="form-control form-input"/>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label-styled">Points de fidélité</label>
-                <input type="number" formControlName="pointsFidelite" class="form-control form-input" min="0" placeholder="0"/>
               </div>
             </div>
           </div>
@@ -302,11 +279,6 @@
                 </label>
                 <textarea formControlName="allergies" class="form-control form-input" rows="2"
                   placeholder="Ex: Pénicilline, Aspirine, Latex"></textarea>
-              </div>
-              <div class="col-12">
-                <label class="form-label-styled">Antécédents médicaux</label>
-                <textarea formControlName="antecedents" class="form-control form-input" rows="3"
-                  placeholder="Historique médical, maladies chroniques…"></textarea>
               </div>
             </div>
           </div>
@@ -340,7 +312,6 @@
     </div>
   </div>
 }
-
 
 <!-- ══════════════════════════════════════════════════════════ -->
 <!--  DOSSIER MÉDICAL MODAL (Angular-driven)                    -->
@@ -384,10 +355,7 @@
                   </div>
                   <dl class="dossier-dl">
                     <dt>Email</dt>       <dd>{{ client.email || '—' }}</dd>
-                    <dt>Téléphone</dt>   <dd>{{ client.telephone || '—' }}</dd>
-                    <dt>Naissance</dt>   <dd>{{ formatDate(client.dateNaissance) }}</dd>
-                    <dt>Points</dt>      <dd><span class="points-badge">{{ client.pointsFidelite ?? 0 }} pts</span></dd>
-                    <dt>Dernière visite</dt><dd>{{ formatDate(client.dateDerniereVisite) }}</dd>
+                    <dt>Téléphone</dt>   <dd>{{ client.tel || '—' }}</dd>
                   </dl>
                 </div>
 
@@ -409,13 +377,6 @@
                     <p class="text-muted small mt-2">Aucune allergie enregistrée.</p>
                   }
                 </div>
-
-                @if (client.antecedents) {
-                  <div class="dossier-card mt-3">
-                    <div class="dossier-card-title">Antécédents médicaux</div>
-                    <p class="small mt-2 mb-0" style="white-space:pre-line;color:#374151;">{{ client.antecedents }}</p>
-                  </div>
-                }
               </div>
 
               <!-- Right: Ventes & Prescriptions -->
@@ -432,15 +393,15 @@
                     <p class="text-muted small mt-2">Aucune transaction pour ce patient.</p>
                   } @else {
                     <table class="dossier-table mt-2">
-                      <thead>
+                       <thead>
                         <tr><th>Date</th><th>Articles</th><th class="text-end">Total TTC</th></tr>
                       </thead>
                       <tbody>
                         @for (vente of dossierVentes(); track vente.id) {
                           <tr>
                             <td>{{ formatDate(vente.dateVente) }}</td>
-                            <td>{{ vente.items.length }} article(s)</td>
-                            <td class="text-end fw-semibold">{{ formatCurrency(vente.totalTTC) }}</td>
+                            <td>{{ vente.lignes.length || 0 }} article(s)</td>
+                            <td class="text-end fw-semibold">{{ formatCurrency(vente.total) }}</td>
                           </tr>
                         }
                       </tbody>

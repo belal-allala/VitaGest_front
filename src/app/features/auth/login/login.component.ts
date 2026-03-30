@@ -39,7 +39,11 @@ export class LoginComponent {
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
         this.isLoading = false;
-        this.router.navigate(['/admin/dashboard']);
+        if (this.authService.isAdmin()) {
+          this.router.navigate(['/admin/dashboard']);
+        } else {
+          this.router.navigate(['/pharmacien/caisse']);
+        }
       },
       error: (err) => {
         this.isLoading = false;

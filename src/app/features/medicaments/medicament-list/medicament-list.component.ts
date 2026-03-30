@@ -5,7 +5,7 @@ import { MedicamentService } from '../../../core/services/medicament.service';
 import { StockService } from '../../../core/services/stock.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Medicament } from '../../../core/models/medicament.model';
-import { Stock } from '../../../core/models/stock.model';
+import { Lot } from '../../../core/models/stock.model';
 
 @Component({
   selector: 'app-medicament-list',
@@ -27,7 +27,11 @@ export class MedicamentListComponent implements OnInit {
     const term = this.searchTerm().toLowerCase().trim();
     const meds = this.medicaments();
     if (!term) return meds;
-    return meds.filter(m => m.nom.toLowerCase().includes(term) || m.dci.toLowerCase().includes(term));
+    return meds.filter(m =>
+      m.nom.toLowerCase().includes(term) ||
+      m.dci.toLowerCase().includes(term) ||
+      (m.classe || '').toLowerCase().includes(term)
+    );
   });
 
   // Services
@@ -37,7 +41,7 @@ export class MedicamentListComponent implements OnInit {
   private fb = inject(FormBuilder);
 
   // Modals Data
-  selectedMedicamentStocks = signal<Stock[]>([]);
+  selectedMedicamentLots = signal<Lot[]>([]);
   selectedMedicamentName = signal<string>('');
   medicamentForm: FormGroup;
   isEditMode = signal<boolean>(false);
@@ -46,7 +50,7 @@ export class MedicamentListComponent implements OnInit {
 
   // Stock Adjustment Data
   stockAdjustForm: FormGroup;
-  selectedStockForAdjust = signal<Stock | null>(null);
+  selectedLotForAdjust = signal<Lot | null>(null);
   isSubmittingAdjust = signal<boolean>(false);
 
   // Notification Toast (Optional advanced UX approach, primitive version here for demo)
@@ -94,12 +98,12 @@ export class MedicamentListComponent implements OnInit {
 
   // --- Stock Modal logic ---
   viewStock(medicament: Medicament) {
-    this.selectedMedicamentStocks.set([]);
+    this.selectedMedicamentLots.set([]);
     this.selectedMedicamentName.set(medicament.nom);
     if (medicament.id) {
       this.stockService.getStocksByMedicament(medicament.id).subscribe({
-        next: (stocks) => {
-          this.selectedMedicamentStocks.set(stocks);
+        next: (lots) => {
+          this.selectedMedicamentLots.set(lots);
         },
         error: (err) => this.showToast('Erreur lors du chargement des stocks.', 'danger')
       });
@@ -114,13 +118,13 @@ export class MedicamentListComponent implements OnInit {
     return expirationDate <= threeMonthsFromNow;
   }
 
-  openAdjustModal(stock: Stock) {
+  openAdjustModal(lot: Lot) {
     // We can assume quantite here represents the NEW total quantity or the difference.
     // Let's assume it sets the NEW absolute quantity, depending on backend implementation.
     // Generally "adjust" means the final quantite or diff. Let's provide the current as default.
-    this.selectedStockForAdjust.set(stock);
+    this.selectedLotForAdjust.set(lot);
     this.stockAdjustForm.reset({
-      quantite: stock.quantite,
+      quantite: lot.quantite,
       motif: ''
     });
   }
@@ -131,23 +135,23 @@ export class MedicamentListComponent implements OnInit {
         return;
      }
 
-     const stock = this.selectedStockForAdjust();
-     if (!stock?.id) return;
+     const lot = this.selectedLotForAdjust();
+     if (!lot?.id) return;
 
      this.isSubmittingAdjust.set(true);
      const { quantite, motif } = this.stockAdjustForm.value;
 
-     this.stockService.adjustStockLot(stock.id, quantite, motif).subscribe({
+     this.stockService.adjustStockLot(lot.id, quantite, motif).subscribe({
         next: () => {
            this.isSubmittingAdjust.set(false);
            this.showToast('Lot ajusté et tracé avec succès.', 'success');
            this.closeModal('adjustStockModal');
-           this.selectedStockForAdjust.set(null);
-           
+           this.selectedLotForAdjust.set(null);
+
            // Refresh the modal view representing the current medicament stock
            const medId = this.currentMedicamentId() || this.medicaments().find(m => m.nom === this.selectedMedicamentName())?.id;
            if (medId) {
-              this.stockService.getStocksByMedicament(medId).subscribe(stocks => this.selectedMedicamentStocks.set(stocks));
+              this.stockService.getStocksByMedicament(medId).subscribe(lots => this.selectedMedicamentLots.set(lots));
            }
            this.loadMedicaments(); // Refresh global table stocks too
         },

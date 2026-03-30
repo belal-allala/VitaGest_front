@@ -1,0 +1,26 @@
+.btn-emerald {
+  background-color: #10b981;
+  color: white;
+  border-color: #10b981;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-emerald:hover {
+  background-color: #059669;
+  border-color: #059669;
+  color: white;
+}
+
+.tracking-wide {
+  letter-spacing: 0.05em;
+}
+
+.modal-overlay {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

@@ -3,21 +3,21 @@ import { Medicament } from './medicament.model';
 
 export type CommandeStatus = 'BROUILLON' | 'EN_ATTENTE' | 'RECUE';
 
-export interface CommandeItem {
+export interface CommandeLigne {
   id?: number;
-  medicamentId: number;
-  medicament?: Medicament;
   quantite: number;
   prixAchat: number;
   dateExpiration: string;
+  medicamentId: number;
+  medicament?: Medicament;
 }
 
 export interface Commande {
   id?: number;
-  fournisseurId: number;
-  fournisseur?: Fournisseur;
-  items: CommandeItem[];
+  date?: string;
   statut: CommandeStatus;
   totalAmount?: number;
-  dateCommande?: string;
+  fournisseurId: number;
+  fournisseur?: Fournisseur;
+  lignes: CommandeLigne[];
 }

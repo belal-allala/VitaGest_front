@@ -1,22 +1,22 @@
 import { Medicament } from './medicament.model';
 import { Client } from './client.model';
 
-export interface VenteItem {
+export interface VenteLigne {
   id?: number;
+  quantite: number;
+  prixUnitaire?: number;
+  remise?: number;
   medicamentId: number;
   medicament?: Medicament;
-  quantite: number;
-  prixUnitaire: number;
 }
 
 export interface Vente {
   id?: number;
+  dateVente?: string;
+  total?: number;
+  mode: string;
   clientId?: number;
   client?: Client;
-  utilisateurId?: number;
-  items: VenteItem[];
-  totalHT: number;
-  totalTVA: number;
-  totalTTC: number;
-  dateVente?: string;
+  vendeurId?: number;
+  lignes: VenteLigne[];
 }

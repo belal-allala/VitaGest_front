@@ -1,162 +1,117 @@
-<div class="container-fluid py-4 position-relative">
-  <!-- Toast overlay -->
-  @if (toastMessage()) {
-    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080">
-      <div class="toast show border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header text-white" [ngClass]="toastMessage()?.type === 'success' ? 'bg-success' : 'bg-danger'">
-          <strong class="me-auto">Notification</strong>
-          <button type="button" class="btn-close btn-close-white" (click)="toastMessage.set(null)" aria-label="Close"></button>
+<div class="container-fluid py-4">
+  <!-- Intelligence Header -->
+  <div class="row align-items-center mb-5 g-4 header-premium">
+    <div class="col-12 col-lg-7">
+      <div class="d-flex align-items-center gap-3 mb-1">
+        <div class="header-icon-box shadow-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
         </div>
-        <div class="toast-body bg-white text-dark fw-medium">
-          {{ toastMessage()?.text }}
+        <div>
+          <h2 class="fw-black mb-0 text-slate tracking-tight">Référentiel Médicaments</h2>
         </div>
       </div>
+      <p class="text-muted fw-medium small-caps ps-5 ms-2 opacity-75">Pilotage centralisé du catalogue & intelligence des flux d'inventaire.</p>
     </div>
-  }
+    <div class="col-12 col-lg-5">
+      <div class="d-flex gap-3 justify-content-lg-end align-items-center">
+        <div class="search-wrapper shadow-sm rounded-pill flex-grow-1">
+          <input type="text" class="form-control border-0 rounded-pill py-2 ps-4" placeholder="Rechercher par Nom ou DCI..."
+                 [ngModel]="searchTerm()" (ngModelChange)="onSearch($event)">
+          <div class="search-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+        </div>
 
-  <!-- Header -->
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-    <div>
-      <h2 class="fw-bold mb-0 text-dark">Référentiel Médicaments</h2>
-      <p class="text-muted small mb-0">Gestion sécurisée du catalogue et surveillance des lots.</p>
-    </div>
-    
-    <div class="d-flex gap-2">
-      <!-- Search -->
-      <div class="input-group" style="max-width: 320px;">
-        <span class="input-group-text bg-white border-end-0 text-muted">
-          <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </span>
-        <input type="text" class="form-control border-start-0 ps-0" placeholder="Rechercher (Nom, DCI)..." 
-               [ngModel]="searchTerm()" (ngModelChange)="onSearch($event)">
+        @if (isAdmin()) {
+          <button class="btn btn-emerald-gradient d-flex align-items-center gap-2 px-4 shadow-sm border-0" data-bs-toggle="modal" data-bs-target="#addEditMedicamentModal" (click)="openAddModal()">
+            <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span class="fw-bold">Nouveau</span>
+          </button>
+        }
       </div>
-
-      <!-- Button Add (Admin Only) -->
-      @if (isAdmin()) {
-        <button class="btn btn-emerald d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addEditMedicamentModal" (click)="openAddModal()">
-          <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          <span class="d-none d-sm-inline">Nouveau Produit</span>
-        </button>
-      }
     </div>
   </div>
 
-  <!-- Global Error Overlay -->
-  @if (globalError() && !isLoading()) {
-    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
-      <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:">
-        <use xlink:href="#exclamation-triangle-fill"/>
-      </svg>
-      <div class="fw-medium">{{ globalError() }}</div>
-    </div>
-  }
-
-  <!-- Data Table Card -->
-  <div class="card border-0 slate-shadow rounded-4 overflow-hidden bg-white">
+  <!-- Premium Inventory Table -->
+  <div class="table-premium">
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
-        <thead class="bg-light text-slate text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">
+        <thead>
           <tr>
-            <th scope="col" class="ps-4 fw-semibold border-bottom py-3">ID</th>
-            <th scope="col" class="fw-semibold border-bottom py-3">Catalogue (Nom & DCI)</th>
-            <th scope="col" class="fw-semibold border-bottom py-3">Forme / Dosage</th>
-            <th scope="col" class="fw-semibold border-bottom py-3">Prix Unitaire</th>
-            <th scope="col" class="fw-semibold border-bottom py-3">Stock Dispo</th>
-            <th scope="col" class="text-end pe-4 fw-semibold border-bottom py-3">Actions</th>
+            <th class="ps-4">Identifiant</th>
+            <th>Produit & DCI</th>
+            <th>Forme / Dosage</th>
+            <th>Prix Unitaire</th>
+            <th>Stock Disponible</th>
+            @if (isAdmin()) {
+               <th class="text-end pe-4">Gestion</th>
+            }
           </tr>
         </thead>
-        <tbody class="border-top-0">
-          
-          <!-- Loading Skeletons -->
+        <tbody>
           @if (isLoading()) {
             @for (i of [1,2,3,4,5]; track i) {
               <tr class="placeholder-glow">
                 <td class="ps-4"><span class="placeholder col-6 rounded"></span></td>
-                <td>
-                  <span class="placeholder col-8 rounded mb-1"></span><br>
-                  <span class="placeholder col-5 rounded bg-secondary"></span>
-                </td>
+                <td><span class="placeholder col-10 rounded"></span></td>
                 <td><span class="placeholder col-8 rounded"></span></td>
                 <td><span class="placeholder col-6 rounded"></span></td>
-                <td><span class="placeholder col-4 rounded-pill"></span></td>
-                <td class="text-end pe-4"><span class="placeholder col-8 rounded"></span></td>
+                <td><span class="placeholder col-4 rounded-pill py-2"></span></td>
+                @if (isAdmin()) {
+                  <td class="text-end pe-4"><span class="placeholder col-8 rounded-pill py-2"></span></td>
+                }
               </tr>
             }
-          }
-
-          <!-- Computed Data Rows -->
-          @if (!isLoading()) {
+          } @else {
             @for (medicament of filteredMedicaments(); track medicament.id) {
               <tr>
-                <td class="ps-4 text-slate small">#{{ medicament.id }}</td>
-                <td>
-                  <div class="fw-bold text-dark">{{ medicament.nom }}</div>
-                  <div class="text-secondary fst-italic small" style="opacity: 0.8;">{{ medicament.dci }}</div>
+                <td class="ps-4">
+                  <span class="badge bg-dark text-white rounded-pill px-3 shadow-sm">#{{ medicament.id }}</span>
                 </td>
                 <td>
-                  <span class="badge rounded-pill bg-light text-dark border px-2 py-1 fw-normal">
-                    {{ medicament.formeDosage }}
-                  </span>
+                  <div class="product-name fw-bold text-slate">{{ medicament.nom }}</div>
+                  <div class="product-dci text-muted small">{{ medicament.dci }}</div>
                 </td>
-                <td class="fw-semibold text-emerald">{{ medicament.prix | currency:'MAD':'symbol':'1.2-2' }}</td>
                 <td>
-                  @switch (true) {
-                    @case ((medicament.quantiteEnStock || 0) < 10) {
-                      <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">
-                        {{ medicament.quantiteEnStock || 0 }} en stock
-                      </span>
-                    }
-                    @case ((medicament.quantiteEnStock || 0) < 20) {
-                      <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">
-                        {{ medicament.quantiteEnStock || 0 }} en stock
-                      </span>
-                    }
-                    @default {
-                      <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
-                        {{ medicament.quantiteEnStock || 0 }} en stock
-                      </span>
-                    }
+                  <span class="text-secondary fw-medium">{{ medicament.formeDosage }}</span>
+                </td>
+                <td>
+                  <span class="fw-bold text-dark fs-6">{{ medicament.prix | currency:'MAD ':'symbol':'1.2-2' }}</span>
+                </td>
+                <td>
+                  @if ((medicament.quantiteEnStock || 0) < 10) {
+                    <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 fw-bold" title="Rupture Imminente">{{ medicament.quantiteEnStock || 0 }}</span>
+                  } @else if ((medicament.quantiteEnStock || 0) < 20) {
+                    <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 fw-bold" title="Stock Faible">{{ medicament.quantiteEnStock || 0 }}</span>
+                  } @else {
+                    <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 fw-bold" title="Stock Sécurisé">{{ medicament.quantiteEnStock || 0 }}</span>
                   }
                 </td>
-                <td class="text-end pe-4">
-                  <div class="btn-group gap-2">
-                    <button class="btn btn-sm action-btn text-primary border-primary bg-primary bg-opacity-10" data-bs-toggle="modal" data-bs-target="#viewStockModal" (click)="viewStock(medicament)" title="Voir Stock & Lots">
-                      <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
-                      </svg>
-                      <span class="ms-1 fw-bold">Lots</span>
-                    </button>
-
-                    @if (isAdmin()) {
-                      <button class="btn btn-sm action-btn text-secondary bg-light border" data-bs-toggle="modal" data-bs-target="#addEditMedicamentModal" (click)="openEditModal(medicament)" title="Modifier">
-                        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
+                @if (isAdmin()) {
+                  <td class="text-end pe-4">
+                    <div class="d-flex justify-content-end gap-2">
+                      <button class="action-btn-circle" data-bs-toggle="modal" data-bs-target="#viewStockModal" (click)="viewStock(medicament)" title="Analyse des lots">
+                        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                       </button>
-                      <button class="btn btn-sm action-btn text-danger bg-danger bg-opacity-10 border-danger border-opacity-25" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" (click)="confirmDelete(medicament)" title="Supprimer">
-                        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                          <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>
-                        </svg>
+                      <button class="action-btn-circle" data-bs-toggle="modal" data-bs-target="#addEditMedicamentModal" (click)="openEditModal(medicament)" title="Modifier">
+                        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                       </button>
-                    }
-                  </div>
-                </td>
+                      <button class="action-btn-circle action-btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" (click)="confirmDelete(medicament)" title="Supprimer">
+                        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      </button>
+                    </div>
+                  </td>
+                }
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="text-center py-5">
-                  <div class="d-flex flex-column align-items-center">
-                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                      <svg style="width: 40px; height: 40px; color: #cbd5e1;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line>
-                      </svg>
+                <td [attr.colspan]="isAdmin() ? 6 : 5" class="text-center py-5">
+                  <div class="p-5">
+                    <div class="text-muted mb-3">
+                      <svg style="width: 64px; height: 64px; opacity: 0.2;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
                     </div>
-                    <h5 class="fw-bold text-dark">Aucune donnée correspondante</h5>
-                    <p class="text-muted small mb-0">Le médicament recherché n'existe pas dans la base de données.</p>
+                    <h5 class="fw-bold text-slate">Aucun médicament trouvé</h5>
+                    <p class="text-muted small">Ajustez vos filtres ou créez un nouveau produit pour commencer.</p>
                   </div>
                 </td>
               </tr>
@@ -240,33 +195,33 @@
               </tr>
             </thead>
             <tbody>
-              @for (stock of selectedMedicamentStocks(); track stock.id) {
+              @for (lot of selectedMedicamentLots(); track lot.id) {
                 <tr>
-                  <td class="ps-4 fw-bold text-dark">{{ stock.lotId }}</td>
-                  <td class="text-center fw-semibold">{{ stock.quantite }}</td>
+                  <td class="ps-4 fw-bold text-dark">{{ lot.lotId }}</td>
+                  <td class="text-center fw-semibold">{{ lot.quantite }}</td>
                   <td>
-                    @if (isExpiringSoon(stock.dateExpiration)) {
+                    @if (isExpiringSoon(lot.dateExpiration)) {
                       <span class="text-danger fw-bold d-flex align-items-center gap-1">
                         <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                           <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
                         </svg>
-                        {{ stock.dateExpiration | date:'dd MMM yyyy' }}
+                        {{ lot.dateExpiration | date:'dd MMM yyyy' }}
                       </span>
                     } @else {
-                      <span class="text-secondary">{{ stock.dateExpiration | date:'dd MMM yyyy' }}</span>
+                      <span class="text-secondary">{{ lot.dateExpiration | date:'dd MMM yyyy' }}</span>
                     }
                   </td>
                   <td class="pe-4 d-flex align-items-center justify-content-between">
-                    @if (isExpiringSoon(stock.dateExpiration)) {
+                    @if (isExpiringSoon(lot.dateExpiration)) {
                       <span class="badge bg-danger flex-shrink-0 me-2">Urgente : Expiration Info</span>
-                    } @else if (stock.quantite === 0) {
+                    } @else if (lot.quantite === 0) {
                       <span class="badge bg-secondary flex-shrink-0 me-2">Lot Épuisé</span>
                     } @else {
                       <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 flex-shrink-0 me-2">Stock Bon</span>
                     }
 
                     @if (isAdmin()) {
-                      <button class="btn btn-sm action-btn text-warning bg-light border ms-auto" data-bs-toggle="modal" data-bs-target="#adjustStockModal" (click)="openAdjustModal(stock)" title="Ajuster Manuellement">
+                      <button class="btn btn-sm action-btn text-warning bg-light border ms-auto" data-bs-toggle="modal" data-bs-target="#adjustStockModal" (click)="openAdjustModal(lot)" title="Ajuster Manuellement">
                          <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line>
                          </svg>
@@ -304,13 +259,13 @@
        <div class="modal-header border-bottom bg-warning bg-opacity-10 px-4 py-3">
          <h6 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
             <svg style="width: 18px; height: 18px;" class="text-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line></svg>
-            Ajustement Lot {{ selectedStockForAdjust()?.lotId }}
+            Ajustement Lot {{ selectedLotForAdjust()?.lotId }}
          </h6>
          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
        </div>
        <form [formGroup]="stockAdjustForm" (ngSubmit)="onSubmitAdjustStock()">
           <div class="modal-body p-4">
-             
+
              <div class="mb-3">
                 <label class="form-label fw-medium small text-muted">Nouvelle Quantité Physique</label>
                 <input type="number" class="form-control text-center fw-bold fs-5 text-dark" formControlName="quantite" [ngClass]="{'is-invalid': stockAdjustForm.get('quantite')?.invalid && stockAdjustForm.get('quantite')?.touched}">
@@ -336,6 +291,26 @@
              </button>
           </div>
        </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-body p-4 text-center">
+        <div class="text-danger mb-3">
+          <svg style="width: 48px; height: 48px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+        </div>
+        <h5 class="fw-bold text-dark">Supprimer le produit ?</h5>
+        <p class="text-muted small">Cette action est irréversible. Toutes les données rattachées seront perdues.</p>
+        <div class="fw-bold text-slate mb-3">{{ medicamentToDelete()?.nom }}</div>
+      </div>
+      <div class="modal-footer border-0 p-3 pt-0 d-flex gap-2">
+        <button type="button" class="btn btn-light flex-grow-1 fw-semibold" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-danger flex-grow-1 fw-semibold" (click)="executeDelete()">Confirmer</button>
+      </div>
     </div>
   </div>
 </div>

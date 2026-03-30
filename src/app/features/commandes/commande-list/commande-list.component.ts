@@ -5,7 +5,7 @@ import { CommandeService } from '../../../core/services/commande.service';
 import { FournisseurService } from '../../../core/services/fournisseur.service';
 import { MedicamentService } from '../../../core/services/medicament.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Commande, CommandeStatus, CommandeItem } from '../../../core/models/commande.model';
+import { Commande, CommandeStatus, CommandeLigne } from '../../../core/models/commande.model';
 import { Fournisseur } from '../../../core/models/fournisseur.model';
 import { Medicament } from '../../../core/models/medicament.model';
 
@@ -28,6 +28,8 @@ export class CommandeListComponent implements OnInit {
   isAdmin = signal<boolean>(false);
   isSubmitting = signal<boolean>(false);
   globalError = signal<string | null>(null);
+  formTotal = signal<number>(0);
+  today = new Date();
 
   // Computed Values
   filteredCommandes = computed(() => {
@@ -57,6 +59,24 @@ export class CommandeListComponent implements OnInit {
       fournisseurId: [null, Validators.required],
       items: this.fb.array([])
     });
+
+    // Listen for form value changes to update totals
+    this.commandeForm.get('items')?.valueChanges.subscribe(() => {
+      this.calculateTotal();
+    });
+  }
+
+  calculateTotal() {
+    const items = this.itemsFormArray.value;
+    const total = items.reduce((sum: number, item: any) => {
+      return sum + ((item.quantite || 0) * (item.prixAchat || 0));
+    }, 0);
+    this.formTotal.set(total);
+  }
+
+  getLineTotal(index: number): number {
+    const item = this.itemsFormArray.at(index).value;
+    return (item.quantite || 0) * (item.prixAchat || 0);
   }
 
   ngOnInit() {
@@ -126,8 +146,14 @@ export class CommandeListComponent implements OnInit {
     }
 
     this.isSubmitting.set(true);
-    const payload = this.commandeForm.value;
-    payload.statut = 'EN_ATTENTE'; 
+    const formValue = this.commandeForm.value;
+    
+    // Explicitly map Form array (items) to Backend DTO (lignes)
+    const payload: Commande = {
+      fournisseurId: formValue.fournisseurId,
+      statut: 'EN_ATTENTE',
+      lignes: formValue.items
+    };
 
     this.commandeService.createCommande(payload).subscribe({
       next: () => {
@@ -140,6 +166,18 @@ export class CommandeListComponent implements OnInit {
         this.isSubmitting.set(false);
         this.showToast(err.message || 'Erreur lors de la création de la commande.', 'danger');
       }
+    });
+  }
+
+  // --- Validation Logic ---
+  validerCommande(id: number | undefined) {
+    if (!id) return;
+    this.commandeService.validerCommande(id).subscribe({
+      next: () => {
+        this.loadData();
+        this.showToast('La commande est passée en statut EN ATTENTE.', 'success');
+      },
+      error: (err) => this.showToast(err.message || 'Erreur lors de la validation.', 'danger')
     });
   }
 
@@ -165,22 +203,32 @@ export class CommandeListComponent implements OnInit {
   // --- Utility ---
   getStatusBadgeClass(statut: string): string {
     switch (statut) {
-      case 'BROUILLON': return 'badge rounded-pill bg-secondary text-white';
-      case 'EN_ATTENTE': return 'badge rounded-pill bg-warning text-dark border border-warning';
-      case 'RECUE': return 'badge rounded-pill bg-success text-white';
-      default: return 'badge rounded-pill bg-light text-dark';
+      case 'BROUILLON': return 'status-badge status-brouillon';
+      case 'EN_ATTENTE': return 'status-badge status-en_attente';
+      case 'RECUE': return 'status-badge status-recue';
+      default: return 'status-badge status-brouillon';
     }
   }
 
-  getStepperClasses(statut: string, step: string): string {
+  getStepState(statut: string, step: string): 'active' | 'completed' | 'pending' {
     const statuses = ['BROUILLON', 'EN_ATTENTE', 'RECUE'];
     const currentIdx = statuses.indexOf(statut);
     const stepIdx = statuses.indexOf(step);
 
-    if (currentIdx >= stepIdx) {
-      return 'stepper-step-active';
-    }
-    return 'stepper-step-inactive';
+    if (currentIdx > stepIdx) return 'completed';
+    if (currentIdx === stepIdx) return 'active';
+    return 'pending';
+  }
+
+  getConnectorState(statut: string, stepBefore: string, stepAfter: string): 'completed' | 'active' | 'pending' {
+    const statuses = ['BROUILLON', 'EN_ATTENTE', 'RECUE'];
+    const currentIdx = statuses.indexOf(statut);
+    const beforeIdx = statuses.indexOf(stepBefore);
+    const afterIdx = statuses.indexOf(stepAfter);
+
+    if (currentIdx >= afterIdx) return 'completed';
+    if (currentIdx === beforeIdx) return 'active';
+    return 'pending';
   }
 
   private showToast(text: string, type: 'success' | 'danger') {

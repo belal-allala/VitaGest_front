@@ -1,107 +1,204 @@
-<section class="dashboard-page">
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+<section class="dashboard-page animate-fade-in p-2 p-lg-4">
+  <!-- Header with dynamic refresh -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
     <div>
-      <h1 class="h4 mb-1 text-slate">Tableau de bord analytique</h1>
-      <p class="mb-0 text-muted">Vue globale de l’activité de la pharmacie VitaGest</p>
+      <h1 class="h3 mb-1 text-slate fw-bold">Vue d'ensemble analytique</h1>
+      <p class="text-muted mb-0 d-flex align-items-center gap-2">
+        <span class="rounded-circle bg-success" style="width: 8px; height: 8px;"></span>
+        Données en temps réel synchronisées avec l'officine
+      </p>
     </div>
-    <button class="btn btn-outline-success btn-sm" (click)="refreshDashboard()">
-      Actualiser
-    </button>
+    <div class="d-flex gap-2">
+      <button class="btn btn-white border shadow-sm d-flex align-items-center gap-2" (click)="refreshDashboard()">
+        <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        Actualiser
+      </button>
+    </div>
   </div>
 
   @if (state().loading) {
-    <div class="glass-card p-4 text-center mb-4">
-      <div class="spinner-border text-success mb-3" role="status" aria-hidden="true"></div>
-      <p class="mb-0 text-muted">Chargement des données du dashboard...</p>
+    <div class="premium-card p-5 text-center mb-4 glass">
+      <div class="spinner-grow text-primary mb-3" role="status"></div>
+      <p class="text-muted fw-medium">Récupération des indicateurs de santé...</p>
     </div>
   } @else if (state().error) {
-    <div class="alert alert-danger d-flex justify-content-between align-items-center mb-4" role="alert">
-      <span>{{ state().error }}</span>
-      <button class="btn btn-sm btn-outline-danger" (click)="refreshDashboard()">Réessayer</button>
+    <div class="alert alert-modern d-flex justify-content-between align-items-center mb-5" role="alert">
+      <div class="d-flex align-items-center gap-3">
+        <svg class="text-danger" style="width: 24px; height: 24px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span class="fw-semibold">{{ state().error }}</span>
+      </div>
+      <button class="btn btn-sm btn-danger" (click)="refreshDashboard()">Réessayer</button>
     </div>
   } @else {
-    <!-- KPI cards -->
-    <div class="row g-3 mb-4">
+    <!-- Dynamic KPI Grid -->
+    <div class="row g-4 mb-5">
       <div class="col-12 col-md-6 col-xl-3">
-        <article class="kpi-card glass-card kpi-success h-100">
-          <p class="kpi-title mb-1">Chiffre d’affaires total</p>
+        <article class="kpi-card kpi-success">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="kpi-title">Revenu Total</span>
+            <div class="p-2 rounded-3 bg-success bg-opacity-10 text-success">
+              <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </div>
+          </div>
           <h3 class="kpi-value mb-0">{{ totalRevenue() | currency:'MAD ':'symbol':'1.0-0' }}</h3>
+          <div class="mt-2 text-success small fw-medium d-flex align-items-center gap-1">
+            <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+            Calculé en temps réel
+          </div>
         </article>
       </div>
+
       <div class="col-12 col-md-6 col-xl-3">
-        <article class="kpi-card glass-card kpi-info h-100">
-          <p class="kpi-title mb-1">Nombre de transactions</p>
+        <article class="kpi-card kpi-info">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="kpi-title">Transactions</span>
+            <div class="p-2 rounded-3 bg-info bg-opacity-10 text-info">
+              <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            </div>
+          </div>
           <h3 class="kpi-value mb-0">{{ transactionCount() | number }}</h3>
+          <div class="mt-2 text-info small fw-medium d-flex align-items-center gap-1">
+            Total des tickets validés
+          </div>
         </article>
       </div>
+
       <div class="col-12 col-md-6 col-xl-3">
-        <article class="kpi-card glass-card kpi-warning h-100">
-          <p class="kpi-title mb-1">Ruptures critiques</p>
-          <h3 class="kpi-value mb-0">{{ criticalStockouts() | number }}</h3>
+        <article class="kpi-card kpi-warning">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="kpi-title">Valeur Inventaire</span>
+            <div class="p-2 rounded-3 bg-warning bg-opacity-10 text-warning">
+              <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            </div>
+          </div>
+          <h3 class="kpi-value mb-0">{{ totalInventoryValue() | currency:'MAD ':'symbol':'1.0-0' }}</h3>
+          <div class="mt-2 text-warning small fw-medium">Actifs immobilisés</div>
         </article>
       </div>
+
       <div class="col-12 col-md-6 col-xl-3">
-        <article class="kpi-card glass-card kpi-danger h-100">
-          <p class="kpi-title mb-1">Alertes d’expiration (90j)</p>
-          <h3 class="kpi-value mb-0">{{ expirationAlerts() | number }}</h3>
+        <article class="kpi-card kpi-primary">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="kpi-title">Commandes</span>
+            <div class="p-2 rounded-3 bg-primary bg-opacity-10 text-primary">
+              <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </div>
+          </div>
+          <h3 class="kpi-value mb-0">{{ pendingOrders() | number }}</h3>
+          <div class="mt-2 text-primary small fw-medium">Flux d'approvisionnement</div>
         </article>
       </div>
     </div>
 
-    <!-- Charts -->
-    <div class="row g-3 mb-4">
+    <!-- Smart Alerts Section -->
+    @if (expiredStockList().length > 0 || lowStockList().length > 0) {
+      <div class="alert-modern p-4 mb-5 animate-fade-in shadow-sm">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="p-2 rounded-circle bg-danger text-white shadow-sm">
+            <svg style="width: 24px; height: 24px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </div>
+          <h5 class="mb-0 fw-bold text-danger">Alertes de Stock Critiques</h5>
+        </div>
+        
+        <div class="row g-4">
+          @if (expiredStockList().length > 0) {
+            <div class="col-12 col-xl-6">
+              <div class="p-3 bg-white rounded-3 border border-danger border-opacity-10 shadow-sm h-100">
+                <div class="fw-bold text-danger mb-2 d-flex align-items-center justify-content-between">
+                  <span>LOTS PÉRIMÉS</span>
+                  <span class="badge bg-danger">{{ expiredStockList().length }}</span>
+                </div>
+                <div class="small text-muted mb-0">
+                  @for (lot of expiredStockList() | slice:0:3; track lot.id) {
+                    <div class="py-1 border-bottom border-light d-flex justify-content-between">
+                      <span class="fw-semibold">{{ lot.medicament?.nom || 'Produit #' + lot.medicamentId }}</span>
+                      <span class="text-danger small">LOT-{{ lot.lotId }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (lowStockList().length > 0) {
+            <div class="col-12 col-xl-6">
+              <div class="p-3 bg-white rounded-3 border border-warning border-opacity-20 shadow-sm h-100">
+                <div class="fw-bold text-warning mb-2 d-flex align-items-center justify-content-between">
+                  <span>STOCKS CRITIQUES</span>
+                  <span class="badge bg-warning text-dark">{{ lowStockList().length }}</span>
+                </div>
+                <div class="small text-muted mb-0">
+                  @for (lot of lowStockList() | slice:0:3; track lot.id) {
+                    <div class="py-1 border-bottom border-light d-flex justify-content-between">
+                      <span class="fw-semibold">{{ lot.medicament?.nom || 'Produit #' + lot.medicamentId }}</span>
+                      <span class="text-danger fw-bold">{{ lot.quantite }} restants</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Analytics & Charts Section -->
+    <div class="row g-4 mb-5">
       <div class="col-12 col-lg-8">
-        <article class="glass-card p-3 h-100">
-          <h2 class="h6 mb-3 text-slate">Sales Trend</h2>
-          <div class="chart-wrapper">
-            <canvas
-              baseChart
-              [type]="'line'"
-              [data]="salesTrendData()"
-              [options]="lineChartOptions"
-            ></canvas>
+        <article class="premium-card p-4 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0 fw-bold text-slate">Tendance des Ventes</h5>
+            <span class="small text-muted fw-medium">Derniers 30 jours (TTC)</span>
+          </div>
+          <div class="chart-container">
+            <canvas baseChart [type]="'line'" [data]="salesTrendData()" [options]="lineChartOptions"></canvas>
           </div>
         </article>
       </div>
+
       <div class="col-12 col-lg-4">
-        <article class="glass-card p-3 h-100">
-          <h2 class="h6 mb-3 text-slate">Stock Distribution</h2>
-          <div class="chart-wrapper">
-            <canvas
-              baseChart
-              [type]="'doughnut'"
-              [data]="stockDistributionData()"
-              [options]="doughnutChartOptions"
-            ></canvas>
+        <article class="premium-card p-4 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0 fw-bold text-slate">Répartition Stock</h5>
+          </div>
+          <div class="chart-container">
+            <canvas baseChart [type]="'doughnut'" [data]="stockDistributionData()" [options]="doughnutChartOptions"></canvas>
           </div>
         </article>
       </div>
     </div>
 
-    <!-- Recent activity -->
-    <div class="row g-3">
+    <!-- Rank & History Section -->
+    <div class="row g-4">
       <div class="col-12 col-lg-8">
-        <article class="glass-card p-3 h-100">
-          <h2 class="h6 mb-3 text-slate">Top 5 Médicaments les plus vendus</h2>
+        <article class="premium-card h-100 overflow-hidden">
+          <div class="p-4 border-bottom bg-light bg-opacity-50">
+            <h5 class="mb-0 fw-bold text-slate">Classement des Meilleures Ventes</h5>
+          </div>
           <div class="table-responsive">
-            <table class="table align-middle mb-0">
+            <table class="table premium-table mb-0 align-middle">
               <thead>
                 <tr>
-                  <th>Médicament</th>
-                  <th class="text-end">Quantité vendue</th>
-                  <th class="text-end">CA généré</th>
+                  <th class="ps-4">Médicament</th>
+                  <th class="text-center">Ventes</th>
+                  <th class="text-end pe-4">Revenu</th>
                 </tr>
               </thead>
               <tbody>
                 @for (item of topSellingMedicines(); track item.name) {
-                  <tr>
-                    <td>{{ item.name }}</td>
-                    <td class="text-end">{{ item.quantitySold | number }}</td>
-                    <td class="text-end">{{ item.revenue | currency:'MAD ':'symbol':'1.0-0' }}</td>
+                  <tr class="top-item-row">
+                    <td class="ps-4 py-3">
+                      <div class="fw-bold text-slate">{{ item.name }}</div>
+                      <div class="progress-bar-custom mt-2" style="width: 100px;">
+                        <div class="progress-fill" [style.width.%]="(item.quantitySold / topSellingMedicines()[0].quantitySold) * 100"></div>
+                      </div>
+                    </td>
+                    <td class="text-center fw-medium">{{ item.quantitySold | number }}</td>
+                    <td class="text-end pe-4 text-success fw-bold">{{ item.revenue | currency:'MAD ':'symbol':'1.0-0' }}</td>
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="3" class="text-center text-muted py-4">Aucune vente disponible.</td>
+                    <td colspan="3" class="text-center text-muted py-5">Aucune donnée de vente accumulée.</td>
                   </tr>
                 }
               </tbody>
@@ -111,27 +208,31 @@
       </div>
 
       <div class="col-12 col-lg-4">
-        <article class="glass-card p-3 h-100">
-          <h2 class="h6 mb-3 text-slate">5 transactions récentes</h2>
-          <div class="activity-feed">
-            @for (transaction of recentTransactions(); track transaction.id ?? $index) {
-              <div class="activity-item">
-                <div class="activity-dot"></div>
-                <div class="activity-content">
-                  <div class="fw-semibold text-slate">
-                    Vente #{{ transaction.id ?? '-' }}
+        <article class="premium-card h-100">
+          <div class="p-4 border-bottom bg-light bg-opacity-50">
+            <h5 class="mb-0 fw-bold text-slate">Flux d'Activité Récent</h5>
+          </div>
+          <div class="p-4">
+            <div class="activity-feed">
+              @for (transaction of recentTransactions(); track transaction.id ?? $index) {
+                <div class="activity-item">
+                  <div class="activity-dot"></div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between">
+                      <span class="fw-bold text-slate">Ticket #{{ transaction.id }}</span>
+                      <span class="text-success fw-bold">{{ transaction.total | currency:'MAD ':'symbol':'1.0-0' }}</span>
+                    </div>
+                    <div class="text-muted small">
+                      {{ transaction.dateVente | date:'dd MMM, HH:mm' }}
+                    </div>
                   </div>
-                  <small class="text-muted">
-                    {{ transaction.dateVente ? (transaction.dateVente | date:'dd/MM/yyyy HH:mm') : 'Date inconnue' }}
-                  </small>
                 </div>
-                <div class="fw-semibold text-success">
-                  {{ transaction.totalTTC | currency:'MAD ':'symbol':'1.0-0' }}
+              } @empty {
+                <div class="text-center py-5">
+                  <p class="text-muted small mb-0">Pas de transaction aujourd'hui.</p>
                 </div>
-              </div>
-            } @empty {
-              <p class="text-muted mb-0">Aucune transaction récente.</p>
-            }
+              }
+            </div>
           </div>
         </article>
       </div>

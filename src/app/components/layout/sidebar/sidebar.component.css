@@ -1,15 +1,55 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+aside {
+  background: var(--bg-sidebar) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 .sidebar-link {
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 3px solid transparent;
+  margin: 2px 8px;
+  color: #94a3b8 !important;
 }
 
 .sidebar-link:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  text-decoration: none;
+  background-color: rgba(255, 255, 255, 0.04);
+  color: #f8fafc !important;
+  transform: translateX(4px);
 }
 
 .sidebar-link.active {
-  background-color: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0) 100%);
+  color: #ffffff !important;
+  border-left-color: var(--primary);
+  font-weight: 600;
+}
+
+.sidebar-link.active span.d-inline-flex {
+  background-color: var(--primary) !important;
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.logo-container {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+}
+
+.action-btn {
+  transition: all 0.2s;
+  border-radius: 8px;
+}
+
+.action-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  color: var(--danger) !important;
+}
+
+/* User Profile Badge */
+.user-badge {
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 

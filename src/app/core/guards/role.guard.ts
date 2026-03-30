@@ -24,6 +24,6 @@ export const roleGuard: CanActivateFn = (route, state) => {
     }
   }
 
-  // Not authorised, redirect to dashboard or login
-  return router.parseUrl('/admin/dashboard');
+  // Not authorised, redirect to pharmacien dashboard
+  return router.parseUrl('/pharmacien/caisse');
 };

@@ -1,12 +1,12 @@
-export type AuditActionType = 'CREATION' | 'MODIFICATION' | 'DELETION' | 'PRICE_CHANGE' | 'STOCK_ADJUSTMENT' | 'LOGIN' | 'SYSTEM_ERROR';
+export type AuditActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'PRICE_CHANGE' | 'STOCK_ADJUSTMENT' | 'LOGIN' | 'SYSTEM_ERROR' | string;
 
 export interface AuditLog {
   id?: number;
-  dateAction: string;
-  actionType: AuditActionType;
-  entiteCible: string; // e.g., "Medicament", "User", "Commande"
-  acteurId?: number;
-  acteurEmail: string;
+  timestamp: string; // was dateAction
+  action: AuditActionType; // was actionType
+  entity: string; // was entiteCible
+  userId?: number; // was acteurId
+  userName: string; // was acteurEmail
   details: string;
   ipAddress?: string;
 }

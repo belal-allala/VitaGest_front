@@ -9,7 +9,7 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class AuditService {
-  private apiUrl = `${environment.apiUrl}/audits`;
+  private apiUrl = `${environment.apiUrl}/audit-logs`;
   private http = inject(HttpClient);
 
   constructor() { }

@@ -2,7 +2,9 @@ import { CommonModule, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/comm
 import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartData, ChartOptions } from 'chart.js';
+import { Chart, registerables, ChartData, ChartOptions } from 'chart.js';
+
+Chart.register(...registerables);
 import { catchError, forkJoin, map, of, startWith, switchMap } from 'rxjs';
 import { Commande } from '../../core/models/commande.model';
 import { Medicament } from '../../core/models/medicament.model';
@@ -73,50 +75,75 @@ export class DashboardComponent {
 
   readonly ventes = computed(() => this.state().ventes);
   readonly medicaments = computed(() => this.state().medicaments);
-  readonly stocks = computed(() => this.state().stocks);
+
+  // Robust Stock enrichment: merge stock data with medicament info if missing
+  readonly stocks = computed(() => {
+    const meds = this.medicaments();
+    return this.state().stocks.map(stock => {
+      if (!stock.medicament && stock.medicamentId && meds.length > 0) {
+        const found = meds.find(m => m.id === stock.medicamentId);
+        if (found) {
+          return { ...stock, medicament: found };
+        }
+      }
+      return stock;
+    });
+  });
 
   readonly totalRevenue = computed(() =>
-    this.ventes().reduce((sum, vente) => sum + (vente.totalTTC ?? 0), 0)
+    this.ventes().reduce((sum, vente) => sum + (vente.total ?? 0), 0)
   );
 
   readonly transactionCount = computed(() => this.ventes().length);
 
-  readonly stockByMedicamentId = computed(() => {
-    const totals = new Map<number, number>();
-    for (const stock of this.stocks()) {
-      if (!stock.medicamentId) {
-        continue;
-      }
-      totals.set(stock.medicamentId, (totals.get(stock.medicamentId) ?? 0) + (stock.quantite ?? 0));
-    }
-    return totals;
+  readonly totalInventoryValue = computed(() => {
+    return this.stocks().reduce(
+      (sum, stock) => sum + (stock.quantite ?? 0) * (stock.medicament?.prix ?? 0),
+      0
+    );
   });
 
-  readonly criticalStockouts = computed(() => {
-    return this.medicaments().filter((medicament) => {
-      if (!medicament.id) {
-        return false;
-      }
-      return (this.stockByMedicamentId().get(medicament.id) ?? 0) <= 0;
-    }).length;
+  readonly pendingOrders = computed(() => {
+    return this.state().commandes.filter(c => c.statut === 'EN_ATTENTE').length;
   });
 
-  readonly expirationAlerts = computed(() => {
+  readonly expiredStockList = computed(() => {
     const now = new Date();
-    const inNinetyDays = new Date();
-    inNinetyDays.setDate(now.getDate() + 90);
+    now.setHours(0, 0, 0, 0);
+    return this.stocks().filter((s) => new Date(s.dateExpiration) < now);
+  });
 
-    return this.stocks().filter((stock) => {
-      const expirationDate = new Date(stock.dateExpiration);
-      return expirationDate >= now && expirationDate <= inNinetyDays;
-    }).length;
+  readonly nearExpiryList = computed(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const inNinetyDays = new Date(now);
+    inNinetyDays.setDate(now.getDate() + 90);
+    return this.stocks().filter((s) => {
+      const exp = new Date(s.dateExpiration);
+      return exp >= now && exp <= inNinetyDays;
+    });
+  });
+
+  readonly lowStockList = computed(() => {
+    return this.stocks().filter((s) => (s.quantite ?? 0) < 10 && (s.quantite ?? 0) > 0);
+  });
+
+  readonly emptyStockList = computed(() => {
+    return this.stocks().filter((s) => (s.quantite ?? 0) === 0);
   });
 
   readonly salesTrendData = computed<ChartData<'line'>>(() => {
+    // Sort sales by date first
+    const sortedVentes = [...this.ventes()].sort((a, b) => {
+      const aTime = a.dateVente ? new Date(a.dateVente).getTime() : 0;
+      const bTime = b.dateVente ? new Date(b.dateVente).getTime() : 0;
+      return aTime - bTime;
+    });
+
     const revenueByDate = new Map<string, number>();
-    for (const vente of this.ventes()) {
+    for (const vente of sortedVentes) {
       const label = this.toDateLabel(vente.dateVente);
-      revenueByDate.set(label, (revenueByDate.get(label) ?? 0) + (vente.totalTTC ?? 0));
+      revenueByDate.set(label, (revenueByDate.get(label) ?? 0) + (vente.total ?? 0));
     }
 
     const labels = Array.from(revenueByDate.keys());
@@ -130,8 +157,9 @@ export class DashboardComponent {
           tension: 0.35,
           borderColor: '#10b981',
           backgroundColor: 'rgba(16, 185, 129, 0.18)',
-          pointRadius: 3,
+          pointRadius: 4,
           pointBackgroundColor: '#10b981',
+          pointHoverRadius: 6,
         },
       ],
     };
@@ -179,7 +207,7 @@ export class DashboardComponent {
     const stats = new Map<number, TopSellingItem>();
 
     for (const vente of this.ventes()) {
-      for (const item of vente.items ?? []) {
+      for (const item of vente.lignes ?? []) {
         const key = item.medicamentId;
         const existing = stats.get(key);
         const itemRevenue = (item.quantite ?? 0) * (item.prixUnitaire ?? 0);

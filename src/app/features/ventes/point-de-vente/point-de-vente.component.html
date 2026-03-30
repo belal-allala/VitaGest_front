@@ -21,12 +21,12 @@
   }
 
   <div class="row g-4">
-    
+
     <!-- LEFT COLUMN: Search & Catalog -->
     <div class="col-12 col-xl-7 col-xxl-8">
       <div class="card border-0 shadow-sm rounded-4 h-100 pos-catalog-card">
         <div class="card-header bg-white border-bottom-0 pt-4 pb-3 px-4 rounded-top-4">
-          
+
           <div class="input-group input-group-lg shadow-sm">
             <span class="input-group-text bg-white border-end-0 text-muted">
               <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -35,7 +35,7 @@
           </div>
 
         </div>
-        
+
         <div class="card-body px-4 pb-4 overflow-auto pos-catalog-body">
           <div class="row g-3">
             @for (med of filteredMedicaments; track med.id) {
@@ -109,20 +109,20 @@
         </div>
 
         <div class="card-body p-0 d-flex flex-column h-100">
-          
+
           <!-- Cart Items List -->
           <ul class="list-group list-group-flush flex-grow-1 overflow-auto ticket-list">
             @for (item of cartItems; track item.medicamentId; let idx = $index) {
               <li class="list-group-item p-3 py-3 border-bottom">
-                
+
                 <div class="d-flex justify-content-between align-items-start mb-2">
                   <div class="fw-semibold text-truncate w-75">{{ item.medicament?.nom }}</div>
-                  <div class="fw-bold">{{ (item.prixUnitaire * item.quantite) | currency:'MAD':'symbol':'1.2-2' }}</div>
+                  <div class="fw-bold">{{ ((item.prixUnitaire || 0) * item.quantite) | currency:'MAD':'symbol':'1.2-2' }}</div>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center">
                   <span class="small text-muted">{{ item.prixUnitaire | currency:'MAD':'symbol':'1.2-2' }} / unité</span>
-                  
+
                   <div class="input-group input-group-sm" style="width: 100px;">
                     <button class="btn btn-outline-secondary px-2" type="button" (click)="decrementQuantity(idx)">
                       <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -157,9 +157,53 @@
               <span class="h4 fw-bold mb-0 text-dark">Total TTC</span>
               <span class="h4 fw-bold mb-0 text-success">{{ totalTTC | currency:'MAD':'symbol':'1.2-2' }}</span>
             </div>
-            
-            <button 
-              class="btn btn-success btn-lg w-100 py-3 fw-bold d-flex justify-content-center align-items-center gap-2 shadow-sm" 
+
+            <!-- PAYMENT SECTION -->
+            <div class="payment-section bg-white p-3 rounded-3 border mb-4 shadow-sm">
+                <label class="form-label small fw-bold text-uppercase text-muted mb-3">Mode de Paiement</label>
+                <div class="row g-2 mb-3">
+                    <div class="col-4">
+                        <button type="button" class="btn btn-sm w-100 py-2 d-flex flex-column align-items-center gap-1"
+                                [class.btn-dark]="paymentMode === 'ESPECES'" [class.btn-outline-dark]="paymentMode !== 'ESPECES'"
+                                (click)="paymentMode = 'ESPECES'">
+                            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="12" y1="12" x2="12" y2="12"/></svg>
+                            <span style="font-size: 0.75rem;">Espèces</span>
+                        </button>
+                    </div>
+                    <div class="col-4">
+                        <button type="button" class="btn btn-sm w-100 py-2 d-flex flex-column align-items-center gap-1"
+                                [class.btn-dark]="paymentMode === 'CARTE'" [class.btn-outline-dark]="paymentMode !== 'CARTE'"
+                                (click)="paymentMode = 'CARTE'">
+                            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" x2="23" y1="10" y2="10"/></svg>
+                            <span style="font-size: 0.75rem;">Carte</span>
+                        </button>
+                    </div>
+                    <div class="col-4">
+                        <button type="button" class="btn btn-sm w-100 py-2 d-flex flex-column align-items-center gap-1"
+                                [class.btn-dark]="paymentMode === 'CHEQUE'" [class.btn-outline-dark]="paymentMode !== 'CHEQUE'"
+                                (click)="paymentMode = 'CHEQUE'">
+                            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>
+                            <span style="font-size: 0.75rem;">Chèque</span>
+                        </button>
+                    </div>
+                </div>
+
+                @if (paymentMode === 'ESPECES') {
+                    <div class="bg-light p-3 rounded-2 border-start border-4 border-success shadow-inner">
+                        <div class="mb-3">
+                            <label class="form-label small fw-medium text-dark mb-1">Montant Reçu (MAD)</label>
+                            <input type="number" class="form-control form-control-lg fw-bold text-success" [(ngModel)]="amountReceived" placeholder="0.00">
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="small fw-bold text-muted">MONNAIE À RENDRE</span>
+                            <span class="h5 mb-0 fw-bold text-danger">{{ changeDue | currency:'MAD ':'symbol':'1.2-2' }}</span>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <button
+              class="btn btn-success btn-lg w-100 py-3 fw-bold d-flex justify-content-center align-items-center gap-2 shadow-sm"
               [disabled]="cartItems.length === 0 || isSubmitting"
               (click)="submitVente()"
             >

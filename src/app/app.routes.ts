@@ -16,7 +16,7 @@ export const routes: Routes = [
   {
     path: 'admin',
     component: AdminLayoutComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
     children: [
       {
         path: '',
@@ -74,6 +74,38 @@ export const routes: Routes = [
         path: 'audits',
         canActivate: [roleGuard],
         loadComponent: () => import('./features/admin/audit-log/audit-log.component').then(m => m.AuditLogComponent)
+      }
+    ],
+  },
+  {
+    path: 'pharmacien',
+    component: AdminLayoutComponent,
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'caisse',
+      },
+      {
+        path: 'caisse',
+        loadComponent: () =>
+          import('./features/ventes/point-de-vente/point-de-vente.component').then(m => m.PointDeVenteComponent),
+      },
+      {
+        path: 'medicaments',
+        loadComponent: () =>
+          import('./features/medicaments/medicament-list/medicament-list.component').then(m => m.MedicamentListComponent),
+      },
+      {
+        path: 'clients',
+        loadComponent: () =>
+          import('./features/clients/client-list/client-list.component').then(m => m.ClientListComponent),
+      },
+      {
+        path: 'ventes',
+        loadComponent: () =>
+          import('./features/ventes/vente-history/vente-history.component').then(m => m.VenteHistoryComponent)
       }
     ],
   },

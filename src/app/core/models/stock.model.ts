@@ -1,11 +1,15 @@
 import { Medicament } from './medicament.model';
 
-export interface Stock {
+export interface Lot {
   id?: number;
   lotId?: string;
-  quantite: number;
+  fabrication?: string;
   dateExpiration: string;
-  dateLivraison: string;
-  medicamentId?: number;
+  quantite: number;
   medicament?: Medicament;
+  medicamentId?: number;
+  dateLivraison?: string;
 }
+
+// Alias for backward compatibility during refactoring
+export type Stock = Lot;

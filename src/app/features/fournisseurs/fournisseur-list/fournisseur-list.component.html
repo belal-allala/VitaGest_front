@@ -33,10 +33,12 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="bg-light text-muted small text-uppercase">
             <tr>
-              <th scope="col" class="ps-4 fw-semibold border-bottom-0 py-3">ID</th>
+              <th scope="col" class="fw-semibold border-bottom-0 py-3">ID</th>
               <th scope="col" class="fw-semibold border-bottom-0 py-3">Nom</th>
               <th scope="col" class="fw-semibold border-bottom-0 py-3">Email</th>
               <th scope="col" class="fw-semibold border-bottom-0 py-3">Téléphone</th>
+              <th scope="col" class="fw-semibold border-bottom-0 py-3">Délai (j)</th>
+              <th scope="col" class="fw-semibold border-bottom-0 py-3">Note</th>
               <th scope="col" class="text-end pe-4 fw-semibold border-bottom-0 py-3">Actions</th>
             </tr>
           </thead>
@@ -45,8 +47,17 @@
               <tr>
                 <td class="ps-4 text-muted">#{{ f.id }}</td>
                 <td class="fw-medium text-dark">{{ f.nom }}</td>
-                <td class="text-muted">{{ f.email || '-' }}</td>
-                <td class="text-muted">{{ f.telephone || '-' }}</td>
+                <td class="text-muted small">{{ f.email || '-' }}</td>
+                <td class="text-muted small">{{ f.tel || '-' }}</td>
+                <td class="text-center">
+                   <span class="badge bg-light text-dark border">{{ f.delaiMoyen }}j</span>
+                </td>
+                <td>
+                   <div class="d-flex align-items-center gap-1">
+                      <svg style="width:12px;height:12px;color:#f59e0b;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                      <span class="small fw-bold">{{ f.note }}/5</span>
+                   </div>
+                </td>
                 <td class="text-end pe-4">
                   <div class="btn-group gap-2">
                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addEditFournisseurModal" (click)="openEditModal(f)">
@@ -60,7 +71,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="5" class="text-center py-5 text-muted">Aucun fournisseur trouvé.</td>
+                <td colspan="7" class="text-center py-5 text-muted">Aucun fournisseur trouvé.</td>
               </tr>
             }
           </tbody>
@@ -74,7 +85,7 @@
 <div class="modal fade" id="addEditFournisseurModal" tabindex="-1" aria-labelledby="addEditFournisseurModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow rounded-4">
-      <div class="modal-header border-bottom-0 pb-0">
+      <div class="modal-header border-bottom-0 pb-0 ps-4 pt-4">
         <h5 class="modal-title fw-bold">{{ isEditMode ? 'Modifier' : 'Nouveau Fournisseur' }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -94,9 +105,20 @@
               <div class="text-danger small mt-1">Email invalide.</div>
             }
           </div>
-          <div class="mb-2">
+          <div class="mb-3">
             <label class="form-label fw-medium small text-muted">Téléphone (Optionnel)</label>
-            <input type="text" class="form-control" formControlName="telephone">
+            <input type="text" class="form-control" formControlName="tel">
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-6">
+               <label class="form-label fw-medium small text-muted">Délai Livraison (j)</label>
+               <input type="number" class="form-control" formControlName="delaiMoyen">
+            </div>
+            <div class="col-6">
+               <label class="form-label fw-medium small text-muted">Note Fiabilité (/5)</label>
+               <input type="number" step="0.1" max="5" min="0" class="form-control" formControlName="note">
+            </div>
           </div>
         </div>
         <div class="modal-footer border-top-0 pt-0 pe-4 pb-4">

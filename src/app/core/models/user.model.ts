@@ -7,10 +7,9 @@ export interface Role {
 
 export interface User {
   id?: number;
-  email: string;
   username: string;
+  email: string;
+  role: Role;
+  isActive?: boolean;
   password?: string;
-  role?: UserRole | Role | string;
-  roles?: Role[];
-  isActive: boolean;
 }

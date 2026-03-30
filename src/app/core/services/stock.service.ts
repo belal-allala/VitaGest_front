@@ -39,9 +39,7 @@ export class StockService {
   }
 
   getStocksByMedicament(medicamentId: number): Observable<Stock[]> {
-    // Fallback implementation compatible with current backend endpoints.
-    return this.getAllStocks().pipe(
-      map((stocks) => stocks.filter((stock) => stock.medicamentId === medicamentId)),
+    return this.http.get<Stock[]>(`${this.apiUrl}/medicament/${medicamentId}`).pipe(
       catchError(this.handleError)
     );
   }
